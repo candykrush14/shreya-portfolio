@@ -32,6 +32,16 @@ const Hero = () => {
     }
   };
 
+  const handleDownloadResume = () => {
+    // Create a link element and trigger download
+    const link = document.createElement('a');
+    link.href = '/shreya-portfolio/resume.pdf'; // Adjust path for GitHub Pages
+    link.download = 'Shreya_Srivastava_Resume.pdf';
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  };
+
   return (
     <section id="home" className="min-h-screen flex items-center justify-center relative overflow-hidden bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-100">
       {/* Animated Background Elements */}
@@ -129,6 +139,7 @@ const Hero = () => {
             </motion.button>
             
             <motion.button
+              onClick={handleDownloadResume}
               whileHover={{ scale: 1.05 }}
               whileTap={{ scale: 0.95 }}
               className="px-8 py-4 bg-white/80 backdrop-blur-sm border border-gray-200 text-gray-700 font-medium rounded-full hover:bg-white hover:shadow-lg transition-all duration-200 flex items-center gap-2"

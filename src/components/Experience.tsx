@@ -1,7 +1,17 @@
 import { motion } from 'framer-motion';
-import { Calendar, MapPin, ExternalLink } from 'lucide-react';
+import { Calendar, MapPin, ExternalLink, Download } from 'lucide-react';
 
 const Experience = () => {
+  const handleDownloadResume = () => {
+    // Create a link element and trigger download
+    const link = document.createElement('a');
+    link.href = '/shreya-portfolio/resume.pdf'; // Adjust path for GitHub Pages
+    link.download = 'Shreya_Srivastava_Resume.pdf';
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  };
+
   const experiences = [
     {
       id: 1,
@@ -218,10 +228,12 @@ const Experience = () => {
           className="text-center mt-16"
         >
           <motion.button
+            onClick={handleDownloadResume}
             whileHover={{ scale: 1.05 }}
             whileTap={{ scale: 0.95 }}
-            className="px-8 py-4 bg-gradient-to-r from-blue-600 to-indigo-600 text-white font-medium rounded-full hover:from-blue-700 hover:to-indigo-700 transition-all duration-200 shadow-lg hover:shadow-xl"
+            className="inline-flex items-center px-8 py-4 bg-gradient-to-r from-blue-600 to-indigo-600 text-white font-medium rounded-full hover:from-blue-700 hover:to-indigo-700 transition-all duration-200 shadow-lg hover:shadow-xl"
           >
+            <Download size={20} className="mr-2" />
             Download Full Resume
           </motion.button>
         </motion.div>
