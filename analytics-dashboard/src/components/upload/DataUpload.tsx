@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Upload, FileText, AlertCircle, Download } from 'lucide-react';
+import { Upload, Download } from 'lucide-react';
 
 interface Props {
   onDataUpload: (data: any[], fileName: string) => void;

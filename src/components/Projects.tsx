@@ -20,7 +20,7 @@ const Projects = () => {
       image: 'https://images.unsplash.com/photo-1551288049-bebda4e38f71?w=600&q=80',
       technologies: ['React', 'TypeScript', 'D3.js', 'Tailwind CSS', 'Framer Motion'],
       githubUrl: 'https://github.com/candykrush14/shreya-portfolio',
-      liveUrl: 'https://candykrush14.github.io/shreya-portfolio/analytics-dashboard/',
+      liveUrl: 'https://candykrush14.github.io/shreya-portfolio/public/analytics-dashboard/',
       category: 'Data Visualization'
     },
     {
@@ -103,7 +103,7 @@ const Projects = () => {
               // Special handling for analytics dashboard
               if (project.id === 2) {
                 e.preventDefault();
-                window.open('https://candykrush14.github.io/shreya-portfolio/analytics-dashboard/', '_blank');
+                window.open('https://candykrush14.github.io/shreya-portfolio/public/analytics-dashboard/', '_blank');
                 return;
               }
               
@@ -170,7 +170,7 @@ const Projects = () => {
               // Special handling for analytics dashboard
               if (project.id === 2) {
                 e.preventDefault();
-                window.open('https://candykrush14.github.io/shreya-portfolio/analytics-dashboard/', '_blank');
+                window.open('https://candykrush14.github.io/shreya-portfolio/public/analytics-dashboard/', '_blank');
                 return;
               }
               

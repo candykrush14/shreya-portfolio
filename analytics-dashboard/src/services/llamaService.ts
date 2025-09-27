@@ -90,6 +90,7 @@ class LlamaService {
   /**
    * Create a prompt for Llama4 to analyze data and provide RCA
    */
+  // @ts-ignore - Used for future API integration
   private createAnalysisPrompt(dataSummary: DataSummary, fileName: string): string {
     return `
 You are an expert data analyst. Analyze the following dataset and provide a comprehensive Root Cause Analysis (RCA).
@@ -188,6 +189,7 @@ Format your response as a JSON object with the keys: analysis, rootCauses (array
   /**
    * Actual Llama4 API call (for production use)
    */
+  // @ts-ignore - Used for future API integration
   private async callLlamaAPI(prompt: string): Promise<LlamaResponse> {
     try {
       const response = await fetch(`${this.baseUrl}/chat/completions`, {
@@ -234,7 +236,7 @@ Format your response as a JSON object with the keys: analysis, rootCauses (array
    */
   async analyzeData(data: any[], fileName: string): Promise<LlamaResponse> {
     const dataSummary = this.generateDataSummary(data);
-    const prompt = this.createAnalysisPrompt(dataSummary, fileName);
+    // const prompt = this.createAnalysisPrompt(dataSummary, fileName); // For future API use
 
     try {
       // For now, use mock - in production, uncomment the line below

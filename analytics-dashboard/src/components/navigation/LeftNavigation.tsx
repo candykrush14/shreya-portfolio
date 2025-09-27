@@ -8,7 +8,7 @@ interface Props {
   setIsCollapsed: (collapsed: boolean) => void;
 }
 
-const LeftNavigation: React.FC<Props> = ({ activeTab, setActiveTab, isCollapsed, setIsCollapsed }) => {
+const LeftNavigation: React.FC<Props> = ({ activeTab, setActiveTab }) => {
   const items = [
     { id: 'dashboard', label: 'Dashboard', icon: LayoutDashboard },
     { id: 'upload', label: 'Data Upload', icon: Upload },
