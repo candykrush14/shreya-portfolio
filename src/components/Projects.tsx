@@ -20,7 +20,7 @@ const Projects = () => {
       image: 'https://images.unsplash.com/photo-1551288049-bebda4e38f71?w=600&q=80',
       technologies: ['React', 'TypeScript', 'D3.js', 'Tailwind CSS', 'Framer Motion'],
       githubUrl: 'https://github.com/candykrush14/shreya-portfolio',
-      liveUrl: 'https://candykrush14.github.io/shreya-portfolio/analytics-dashboard-pages/',
+      liveUrl: './analytics-dashboard-pages/',
       category: 'Data Visualization'
     },
     {
@@ -100,14 +100,7 @@ const Projects = () => {
             whileTap={{ scale: 0.9 }}
             href={project.liveUrl}
             onClick={(e) => {
-              // Special handling for analytics dashboard
-              if (project.id === 2) {
-                e.preventDefault();
-                window.open('https://candykrush14.github.io/shreya-portfolio/analytics-dashboard-pages/', '_blank');
-                return;
-              }
-              
-              // Handle other non-http URLs
+              // Handle non-http URLs (relative paths)
               if (!project.liveUrl.startsWith('http')) {
                 e.preventDefault();
                 window.open(project.liveUrl, '_blank');
@@ -167,14 +160,7 @@ const Projects = () => {
             whileTap={{ scale: 0.95 }}
             href={project.liveUrl}
             onClick={(e) => {
-              // Special handling for analytics dashboard
-              if (project.id === 2) {
-                e.preventDefault();
-                window.open('https://candykrush14.github.io/shreya-portfolio/analytics-dashboard-pages/', '_blank');
-                return;
-              }
-              
-              // Handle other non-http URLs
+              // Handle non-http URLs (relative paths)
               if (!project.liveUrl.startsWith('http')) {
                 e.preventDefault();
                 window.open(project.liveUrl, '_blank');
