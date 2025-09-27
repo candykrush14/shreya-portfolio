@@ -1,0 +1,1292 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Enterprise Analytics Dashboard</title>
+    <script src="https://unpkg.com/react@18/umd/react.development.js"></script>
+    <script src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"></script>
+    <script src="https://d3js.org/d3.v7.min.js"></script>
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+    <script src="https://unpkg.com/jspdf@2.5.1/dist/jspdf.umd.min.js"></script>
+    <script src="https://unpkg.com/html2canvas@1.4.1/dist/html2canvas.min.js"></script>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://unpkg.com/papaparse@5.4.1/papaparse.min.js"></script>
+    <script src="https://unpkg.com/recharts@2.8.0/umd/Recharts.js"></script>
+    <style>
+        .chart-container { min-height: 400px; }
+        .loading-spinner { animation: spin 1s linear infinite; }
+        @keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
+        .gradient-bg { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); }
+        .glass-effect { backdrop-filter: blur(10px); background: rgba(255, 255, 255, 0.1); }
+        .hover-scale { transition: transform 0.2s ease; }
+        .hover-scale:hover { transform: scale(1.02); }
+    </style>
+</head>
+<body>
+    <div id="root"></div>
+
+    <script type="text/babel">
+        const { 
+            useState, 
+            useEffect, 
+            useContext, 
+            createContext, 
+            useCallback, 
+            useMemo, 
+            useRef,
+            memo,
+            forwardRef,
+            createElement: e 
+        } = React;
+
+        // ====================== CONSTANTS & UTILITIES ======================
+        const CHART_TYPES = {
+            LINE: 'line',
+            BAR: 'bar',
+            AREA: 'area',
+            PIE: 'pie',
+            SCATTER: 'scatter',
+            HEATMAP: 'heatmap',
+            FUNNEL: 'funnel',
+            TREEMAP: 'treemap'
+        };
+
+        const DATA_TYPES = {
+            SALES: 'sales',
+            MARKETING: 'marketing',
+            FINANCE: 'finance',
+            OPERATIONS: 'operations',
+            CUSTOM: 'custom'
+        };
+
+        const generateUniqueId = () => `${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+
+        const formatCurrency = (value) => new Intl.NumberFormat('en-US', {
+            style: 'currency',
+            currency: 'USD'
+        }).format(value);
+
+        const formatPercentage = (value) => `${Number(value).toFixed(2)}%`;
+
+        const calculateTrend = (current, previous) => {
+            if (!previous || previous === 0) return 0;
+            return ((current - previous) / previous) * 100;
+        };
+
+        const debounce = (func, wait) => {
+            let timeout;
+            return function executedFunction(...args) {
+                const later = () => {
+                    clearTimeout(timeout);
+                    func(...args);
+                };
+                clearTimeout(timeout);
+                timeout = setTimeout(later, wait);
+            };
+        };
+
+        // ====================== CONTEXTS ======================
+        const AnalyticsContext = createContext();
+        const ThemeContext = createContext();
+        const NotificationContext = createContext();
+
+        // ====================== SERVICES ======================
+        class AnalyticsEngine {
+            static generateAdvancedInsights(data, options = {}) {
+                if (!data || data.length < 2) return [];
+
+                const insights = [];
+                const metrics = ['revenue', 'users', 'conversion', 'satisfaction'];
+                
+                metrics.forEach(metric => {
+                    const values = data.map(d => Number(d[metric]) || 0);
+                    const trend = this.calculateMovingAverage(values, 3);
+                    const volatility = this.calculateVolatility(values);
+                    const forecast = this.linearRegression(values);
+                    
+                    insights.push({
+                        id: generateUniqueId(),
+                        metric,
+                        trend: trend.slice(-1)[0],
+                        volatility,
+                        forecast: forecast.predict(data.length),
+                        confidence: this.calculateConfidence(values),
+                        recommendation: this.generateRecommendation(metric, trend, volatility),
+                        priority: this.calculatePriority(trend, volatility),
+                        timestamp: new Date().toISOString()
+                    });
+                });
+
+                return insights.sort((a, b) => b.priority - a.priority);
+            }
+
+            static calculateMovingAverage(data, period) {
+                const result = [];
+                for (let i = period - 1; i < data.length; i++) {
+                    const sum = data.slice(i - period + 1, i + 1).reduce((a, b) => a + b, 0);
+                    result.push(sum / period);
+                }
+                return result;
+            }
+
+            static calculateVolatility(data) {
+                const mean = data.reduce((a, b) => a + b, 0) / data.length;
+                const variance = data.reduce((acc, val) => acc + Math.pow(val - mean, 2), 0) / data.length;
+                return Math.sqrt(variance);
+            }
+
+            static linearRegression(data) {
+                const n = data.length;
+                const x = data.map((_, i) => i);
+                const y = data;
+                
+                const sumX = x.reduce((a, b) => a + b, 0);
+                const sumY = y.reduce((a, b) => a + b, 0);
+                const sumXY = x.reduce((acc, xi, i) => acc + xi * y[i], 0);
+                const sumXX = x.reduce((acc, xi) => acc + xi * xi, 0);
+                
+                const slope = (n * sumXY - sumX * sumY) / (n * sumXX - sumX * sumX);
+                const intercept = (sumY - slope * sumX) / n;
+                
+                return {
+                    slope,
+                    intercept,
+                    predict: (x) => slope * x + intercept,
+                    r2: this.calculateR2(data, slope, intercept)
+                };
+            }
+
+            static calculateR2(actual, slope, intercept) {
+                const predicted = actual.map((_, i) => slope * i + intercept);
+                const actualMean = actual.reduce((a, b) => a + b, 0) / actual.length;
+                
+                const ssRes = actual.reduce((acc, val, i) => acc + Math.pow(val - predicted[i], 2), 0);
+                const ssTot = actual.reduce((acc, val) => acc + Math.pow(val - actualMean, 2), 0);
+                
+                return 1 - (ssRes / ssTot);
+            }
+
+            static calculateConfidence(data) {
+                const volatility = this.calculateVolatility(data);
+                const mean = data.reduce((a, b) => a + b, 0) / data.length;
+                const cv = volatility / mean;
+                return Math.max(0.1, Math.min(0.99, 1 - cv));
+            }
+
+            static generateRecommendation(metric, trend, volatility) {
+                const recommendations = {
+                    revenue: {
+                        positive: "Revenue growth is strong. Consider scaling successful initiatives and exploring new markets.",
+                        negative: "Revenue decline detected. Analyze customer retention and pricing strategies immediately.",
+                        volatile: "Revenue shows high volatility. Implement risk management and diversification strategies."
+                    },
+                    users: {
+                        positive: "User acquisition is performing well. Focus on retention and engagement optimization.",
+                        negative: "User growth is declining. Review acquisition channels and user experience improvements.",
+                        volatile: "User metrics are unstable. Investigate seasonal patterns and external factors."
+                    },
+                    conversion: {
+                        positive: "Conversion rates are improving. Document and replicate successful tactics across channels.",
+                        negative: "Conversion rates need attention. Audit user journey and optimize conversion funnels.",
+                        volatile: "Conversion performance is inconsistent. A/B test different approaches for stability."
+                    },
+                    satisfaction: {
+                        positive: "Customer satisfaction is high. Leverage positive feedback for marketing and referrals.",
+                        negative: "Customer satisfaction declining. Immediate customer service and product improvements needed.",
+                        volatile: "Customer satisfaction varies significantly. Investigate root causes and standardize experience."
+                    }
+                };
+
+                const metricRecs = recommendations[metric] || recommendations.revenue;
+                const lastTrend = trend[trend.length - 1] || 0;
+                
+                if (volatility > 0.3) return metricRecs.volatile;
+                return lastTrend > 0 ? metricRecs.positive : metricRecs.negative;
+            }
+
+            static calculatePriority(trend, volatility) {
+                const lastTrend = trend[trend.length - 1] || 0;
+                let priority = 0.5;
+                
+                if (lastTrend < -10) priority += 0.4;
+                else if (lastTrend > 15) priority += 0.3;
+                
+                if (volatility > 0.4) priority += 0.2;
+                
+                return Math.min(1, priority);
+            }
+        }
+
+        class DataProcessor {
+            static processCSVData(csvData) {
+                try {
+                    const processed = csvData.map((row, index) => ({
+                        id: generateUniqueId(),
+                        index,
+                        ...row,
+                        timestamp: row.timestamp || new Date().toISOString(),
+                        revenue: Number(row.revenue) || 0,
+                        users: Number(row.users) || 0,
+                        conversion: Number(row.conversion) || 0,
+                        satisfaction: Number(row.satisfaction) || 0
+                    }));
+                    
+                    return this.validateData(processed);
+                } catch (error) {
+                    console.error('Data processing error:', error);
+                    return [];
+                }
+            }
+
+            static validateData(data) {
+                return data.filter(item => 
+                    item.revenue >= 0 && 
+                    item.users >= 0 && 
+                    item.conversion >= 0 && 
+                    item.conversion <= 100
+                );
+            }
+
+            static generateSampleData(type = DATA_TYPES.SALES, count = 12) {
+                const templates = {
+                    [DATA_TYPES.SALES]: this.generateSalesData(count),
+                    [DATA_TYPES.MARKETING]: this.generateMarketingData(count),
+                    [DATA_TYPES.FINANCE]: this.generateFinanceData(count),
+                    [DATA_TYPES.OPERATIONS]: this.generateOperationsData(count)
+                };
+                
+                return templates[type] || templates[DATA_TYPES.SALES];
+            }
+
+            static generateSalesData(count) {
+                const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+                return Array.from({ length: count }, (_, i) => ({
+                    id: generateUniqueId(),
+                    period: months[i % 12],
+                    revenue: 50000 + Math.random() * 50000,
+                    users: 1000 + Math.random() * 1000,
+                    conversion: 2 + Math.random() * 6,
+                    satisfaction: 80 + Math.random() * 20,
+                    category: ['Technology', 'Healthcare', 'Finance', 'Retail', 'Education'][i % 5],
+                    region: ['North', 'South', 'East', 'West'][i % 4],
+                    channel: ['Online', 'Retail', 'Partner', 'Direct'][i % 4],
+                    timestamp: new Date(2024, i % 12, 1).toISOString()
+                }));
+            }
+
+            static generateMarketingData(count) {
+                return Array.from({ length: count }, (_, i) => ({
+                    id: generateUniqueId(),
+                    period: `Week ${i + 1}`,
+                    impressions: 100000 + Math.random() * 200000,
+                    clicks: 5000 + Math.random() * 10000,
+                    conversions: 200 + Math.random() * 500,
+                    cost: 10000 + Math.random() * 20000,
+                    ctr: 2 + Math.random() * 8,
+                    cpc: 1 + Math.random() * 5,
+                    roas: 2 + Math.random() * 6,
+                    timestamp: new Date(2024, 0, (i + 1) * 7).toISOString()
+                }));
+            }
+
+            static generateFinanceData(count) {
+                return Array.from({ length: count }, (_, i) => ({
+                    id: generateUniqueId(),
+                    period: `Q${(i % 4) + 1} 2024`,
+                    revenue: 1000000 + Math.random() * 2000000,
+                    expenses: 600000 + Math.random() * 800000,
+                    profit: 400000 + Math.random() * 600000,
+                    cashFlow: 200000 + Math.random() * 400000,
+                    assets: 5000000 + Math.random() * 5000000,
+                    liabilities: 2000000 + Math.random() * 3000000,
+                    timestamp: new Date(2024, i * 3, 1).toISOString()
+                }));
+            }
+
+            static generateOperationsData(count) {
+                return Array.from({ length: count }, (_, i) => ({
+                    id: generateUniqueId(),
+                    period: `Day ${i + 1}`,
+                    orders: 100 + Math.random() * 500,
+                    fulfilled: 80 + Math.random() * 400,
+                    returned: 5 + Math.random() * 20,
+                    efficiency: 80 + Math.random() * 20,
+                    quality: 85 + Math.random() * 15,
+                    defects: Math.random() * 5,
+                    timestamp: new Date(2024, 0, i + 1).toISOString()
+                }));
+            }
+
+            static generateTemplateCSV(type = DATA_TYPES.SALES) {
+                const sampleData = this.generateSampleData(type, 3);
+                const headers = Object.keys(sampleData[0]).filter(key => key !== 'id');
+                
+                let csv = headers.join(',') + '\\n';
+                sampleData.forEach(row => {
+                    csv += headers.map(header => row[header]).join(',') + '\\n';
+                });
+                
+                return csv;
+            }
+        }
+
+        class ReportGenerator {
+            static async generateComprehensiveReport(data, insights, chartRefs, options = {}) {
+                const { jsPDF } = window.jspdf;
+                const pdf = new jsPDF('p', 'mm', 'a4');
+                let currentY = 20;
+
+                // Cover Page
+                await this.addCoverPage(pdf);
+                
+                // Executive Summary
+                pdf.addPage();
+                currentY = await this.addExecutiveSummary(pdf, data, insights);
+                
+                // Detailed Analytics
+                pdf.addPage();
+                currentY = await this.addDetailedAnalytics(pdf, data, insights);
+                
+                // Charts and Visualizations
+                for (let chartRef of chartRefs) {
+                    if (chartRef.current) {
+                        pdf.addPage();
+                        await this.addChartToPage(pdf, chartRef.current);
+                    }
+                }
+                
+                // Recommendations
+                pdf.addPage();
+                await this.addRecommendations(pdf, insights);
+                
+                // Appendices
+                pdf.addPage();
+                await this.addAppendices(pdf, data);
+                
+                return pdf;
+            }
+
+            static async addCoverPage(pdf) {
+                pdf.setFontSize(28);
+                pdf.setTextColor(44, 62, 80);
+                pdf.text('Enterprise Analytics Report', 105, 50, { align: 'center' });
+                
+                pdf.setFontSize(16);
+                pdf.text('Comprehensive Business Intelligence Dashboard', 105, 70, { align: 'center' });
+                
+                pdf.setFontSize(12);
+                pdf.text(`Generated on: ${new Date().toLocaleDateString()}`, 105, 90, { align: 'center' });
+                
+                // Add decorative elements
+                pdf.setDrawColor(52, 152, 219);
+                pdf.setLineWidth(2);
+                pdf.line(30, 110, 180, 110);
+                
+                return 120;
+            }
+
+            static async addExecutiveSummary(pdf, data, insights) {
+                let y = 30;
+                
+                pdf.setFontSize(18);
+                pdf.setTextColor(52, 73, 94);
+                pdf.text('Executive Summary', 20, y);
+                y += 15;
+                
+                const latestData = data[data.length - 1];
+                const metrics = [
+                    { label: 'Total Revenue', value: formatCurrency(latestData.revenue || 0) },
+                    { label: 'Active Users', value: (latestData.users || 0).toLocaleString() },
+                    { label: 'Conversion Rate', value: formatPercentage(latestData.conversion || 0) },
+                    { label: 'Satisfaction Score', value: formatPercentage(latestData.satisfaction || 0) }
+                ];
+                
+                pdf.setFontSize(12);
+                metrics.forEach(metric => {
+                    pdf.text(`${metric.label}: ${metric.value}`, 20, y);
+                    y += 8;
+                });
+                
+                y += 10;
+                pdf.setFontSize(14);
+                pdf.text('Key Insights:', 20, y);
+                y += 10;
+                
+                pdf.setFontSize(10);
+                insights.slice(0, 3).forEach(insight => {
+                    const text = pdf.splitTextToSize(insight.recommendation, 170);
+                    pdf.text(text, 20, y);
+                    y += text.length * 5 + 5;
+                });
+                
+                return y;
+            }
+
+            static async addDetailedAnalytics(pdf, data, insights) {
+                let y = 30;
+                
+                pdf.setFontSize(18);
+                pdf.text('Detailed Analytics', 20, y);
+                y += 20;
+                
+                insights.forEach(insight => {
+                    if (y > 250) {
+                        pdf.addPage();
+                        y = 20;
+                    }
+                    
+                    pdf.setFontSize(12);
+                    pdf.setTextColor(52, 73, 94);
+                    pdf.text(`${insight.metric.toUpperCase()} Analysis`, 20, y);
+                    y += 8;
+                    
+                    pdf.setFontSize(10);
+                    pdf.setTextColor(0, 0, 0);
+                    
+                    const details = [
+                        `Trend: ${insight.trend > 0 ? 'Positive' : 'Negative'} (${insight.trend.toFixed(2)}%)`,
+                        `Volatility: ${insight.volatility.toFixed(2)}`,
+                        `Confidence: ${(insight.confidence * 100).toFixed(0)}%`,
+                        `Priority: ${(insight.priority * 100).toFixed(0)}%`
+                    ];
+                    
+                    details.forEach(detail => {
+                        pdf.text(detail, 25, y);
+                        y += 6;
+                    });
+                    
+                    const recText = pdf.splitTextToSize(insight.recommendation, 170);
+                    pdf.text(recText, 25, y);
+                    y += recText.length * 5 + 10;
+                });
+                
+                return y;
+            }
+
+            static async addChartToPage(pdf, chartElement) {
+                try {
+                    const canvas = await html2canvas(chartElement, {
+                        scale: 2,
+                        useCORS: true,
+                        backgroundColor: '#ffffff'
+                    });
+                    
+                    const imgData = canvas.toDataURL('image/png');
+                    const imgWidth = 170;
+                    const imgHeight = (canvas.height * imgWidth) / canvas.width;
+                    
+                    pdf.setFontSize(14);
+                    pdf.text('Data Visualization', 20, 30);
+                    
+                    pdf.addImage(imgData, 'PNG', 20, 40, imgWidth, Math.min(imgHeight, 200));
+                } catch (error) {
+                    console.error('Chart capture failed:', error);
+                    pdf.text('Chart capture failed', 20, 50);
+                }
+            }
+
+            static async addRecommendations(pdf, insights) {
+                let y = 30;
+                
+                pdf.setFontSize(18);
+                pdf.text('Strategic Recommendations', 20, y);
+                y += 20;
+                
+                const priorityInsights = insights.sort((a, b) => b.priority - a.priority);
+                
+                priorityInsights.forEach((insight, index) => {
+                    if (y > 250) {
+                        pdf.addPage();
+                        y = 20;
+                    }
+                    
+                    pdf.setFontSize(12);
+                    pdf.text(`${index + 1}. ${insight.metric.toUpperCase()} Recommendations`, 20, y);
+                    y += 10;
+                    
+                    pdf.setFontSize(10);
+                    const text = pdf.splitTextToSize(insight.recommendation, 170);
+                    pdf.text(text, 25, y);
+                    y += text.length * 5 + 10;
+                });
+                
+                return y;
+            }
+
+            static async addAppendices(pdf, data) {
+                pdf.setFontSize(18);
+                pdf.text('Data Appendix', 20, 30);
+                
+                pdf.setFontSize(10);
+                pdf.text('Raw data summary and methodology notes...', 20, 50);
+                pdf.text(`Total data points analyzed: ${data.length}`, 20, 60);
+                pdf.text(`Analysis period: ${data[0]?.timestamp?.split('T')[0]} to ${data[data.length - 1]?.timestamp?.split('T')[0]}`, 20, 70);
+            }
+        }
+
+        // ====================== HIGHER ORDER COMPONENTS ======================
+        const withErrorBoundary = (WrappedComponent) => {
+            return class extends React.Component {
+                constructor(props) {
+                    super(props);
+                    this.state = { hasError: false, error: null };
+                }
+
+                static getDerivedStateFromError(error) {
+                    return { hasError: true, error };
+                }
+
+                componentDidCatch(error, errorInfo) {
+                    console.error('Error caught by boundary:', error, errorInfo);
+                }
+
+                render() {
+                    if (this.state.hasError) {
+                        return e('div', { className: 'p-8 text-center' },
+                            e('h2', { className: 'text-xl font-bold text-red-600 mb-4' }, 'Something went wrong'),
+                            e('p', { className: 'text-gray-600' }, 'Please refresh the page and try again.'),
+                            e('button', {
+                                className: 'mt-4 px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600',
+                                onClick: () => this.setState({ hasError: false, error: null })
+                            }, 'Try Again')
+                        );
+                    }
+
+                    return e(WrappedComponent, this.props);
+                }
+            };
+        };
+
+        const withLoading = (WrappedComponent) => {
+            return memo(({ isLoading, loadingText = 'Loading...', ...props }) => {
+                if (isLoading) {
+                    return e('div', { className: 'flex items-center justify-center p-8' },
+                        e('div', { className: 'loading-spinner w-8 h-8 border-4 border-blue-500 border-t-transparent rounded-full mr-3' }),
+                        e('span', { className: 'text-gray-600' }, loadingText)
+                    );
+                }
+                return e(WrappedComponent, props);
+            });
+        };
+
+        const withAnalytics = (WrappedComponent) => {
+            return memo((props) => {
+                const analyticsData = useContext(AnalyticsContext);
+                return e(WrappedComponent, { ...props, analytics: analyticsData });
+            });
+        };
+
+        const withTheme = (WrappedComponent) => {
+            return memo((props) => {
+                const theme = useContext(ThemeContext);
+                return e(WrappedComponent, { ...props, theme });
+            });
+        };
+
+        // ====================== CUSTOM HOOKS ======================
+        const useDebounce = (value, delay) => {
+            const [debouncedValue, setDebouncedValue] = useState(value);
+
+            useEffect(() => {
+                const handler = setTimeout(() => setDebouncedValue(value), delay);
+                return () => clearTimeout(handler);
+            }, [value, delay]);
+
+            return debouncedValue;
+        };
+
+        const useLocalStorage = (key, initialValue) => {
+            const [storedValue, setStoredValue] = useState(() => {
+                try {
+                    const item = window.localStorage.getItem(key);
+                    return item ? JSON.parse(item) : initialValue;
+                } catch (error) {
+                    console.error('Error reading localStorage:', error);
+                    return initialValue;
+                }
+            });
+
+            const setValue = useCallback((value) => {
+                try {
+                    setStoredValue(value);
+                    window.localStorage.setItem(key, JSON.stringify(value));
+                } catch (error) {
+                    console.error('Error setting localStorage:', error);
+                }
+            }, [key]);
+
+            return [storedValue, setValue];
+        };
+
+        const useAnalyticsData = () => {
+            const [data, setData] = useLocalStorage('analyticsData', []);
+            const [insights, setInsights] = useState([]);
+            const [isProcessing, setIsProcessing] = useState(false);
+
+            const processData = useCallback(async (newData) => {
+                setIsProcessing(true);
+                try {
+                    const processed = DataProcessor.processCSVData(newData);
+                    const generatedInsights = AnalyticsEngine.generateAdvancedInsights(processed);
+                    
+                    setData(processed);
+                    setInsights(generatedInsights);
+                } catch (error) {
+                    console.error('Data processing failed:', error);
+                } finally {
+                    setIsProcessing(false);
+                }
+            }, [setData]);
+
+            return {
+                data,
+                insights,
+                isProcessing,
+                processData,
+                setData,
+                setInsights
+            };
+        };
+
+        // ====================== COMPONENTS ======================
+        const FileUploader = memo(({ onDataUpload, acceptedTypes = '.csv' }) => {
+            const [dragActive, setDragActive] = useState(false);
+            const [uploading, setUploading] = useState(false);
+            const fileInputRef = useRef(null);
+
+            const handleDrag = useCallback((e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                if (e.type === "dragenter" || e.type === "dragover") {
+                    setDragActive(true);
+                } else if (e.type === "dragleave") {
+                    setDragActive(false);
+                }
+            }, []);
+
+            const handleDrop = useCallback((e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                setDragActive(false);
+                
+                if (e.dataTransfer.files && e.dataTransfer.files[0]) {
+                    handleFile(e.dataTransfer.files[0]);
+                }
+            }, []);
+
+            const handleFile = useCallback((file) => {
+                if (!file.name.endsWith('.csv')) {
+                    alert('Please upload a CSV file');
+                    return;
+                }
+
+                setUploading(true);
+                const reader = new FileReader();
+                
+                reader.onload = (e) => {
+                    try {
+                        const csv = e.target.result;
+                        const parsed = Papa.parse(csv, { header: true, skipEmptyLines: true });
+                        onDataUpload(parsed.data);
+                    } catch (error) {
+                        console.error('CSV parsing failed:', error);
+                        alert('Failed to parse CSV file');
+                    } finally {
+                        setUploading(false);
+                    }
+                };
+                
+                reader.readAsText(file);
+            }, [onDataUpload]);
+
+            const handleInputChange = useCallback((e) => {
+                if (e.target.files && e.target.files[0]) {
+                    handleFile(e.target.files[0]);
+                }
+            }, [handleFile]);
+
+            return e('div', {
+                className: `relative border-2 border-dashed rounded-lg p-8 text-center transition-colors ${
+                    dragActive ? 'border-blue-500 bg-blue-50' : 'border-gray-300 hover:border-gray-400'
+                }`,
+                onDragEnter: handleDrag,
+                onDragLeave: handleDrag,
+                onDragOver: handleDrag,
+                onDrop: handleDrop
+            },
+                e('input', {
+                    ref: fileInputRef,
+                    type: 'file',
+                    accept: acceptedTypes,
+                    onChange: handleInputChange,
+                    className: 'absolute inset-0 w-full h-full opacity-0 cursor-pointer'
+                }),
+                uploading ? 
+                    e('div', { className: 'flex items-center justify-center' },
+                        e('div', { className: 'loading-spinner w-6 h-6 border-2 border-blue-500 border-t-transparent rounded-full mr-2' }),
+                        e('span', null, 'Processing file...')
+                    ) :
+                    e('div', null,
+                        e('div', { className: 'text-4xl mb-4' }, '📊'),
+                        e('h3', { className: 'text-lg font-semibold text-gray-700 mb-2' }, 'Upload Analytics Data'),
+                        e('p', { className: 'text-gray-500 mb-4' }, 'Drag and drop your CSV file here, or click to select'),
+                        e('button', {
+                            className: 'px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600 transition-colors',
+                            onClick: () => fileInputRef.current?.click()
+                        }, 'Choose File')
+                    )
+            );
+        });
+
+        const TemplateDownloader = memo(() => {
+            const [selectedType, setSelectedType] = useState(DATA_TYPES.SALES);
+
+            const downloadTemplate = useCallback(() => {
+                const csv = DataProcessor.generateTemplateCSV(selectedType);
+                const blob = new Blob([csv], { type: 'text/csv' });
+                const url = window.URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = `${selectedType}_template.csv`;
+                a.click();
+                window.URL.revokeObjectURL(url);
+            }, [selectedType]);
+
+            return e('div', { className: 'bg-white rounded-lg shadow-lg p-6' },
+                e('h3', { className: 'text-lg font-semibold text-gray-800 mb-4' }, 'Download Data Template'),
+                e('div', { className: 'mb-4' },
+                    e('label', { className: 'block text-sm font-medium text-gray-700 mb-2' }, 'Select Template Type:'),
+                    e('select', {
+                        value: selectedType,
+                        onChange: (e) => setSelectedType(e.target.value),
+                        className: 'w-full p-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500'
+                    },
+                        Object.values(DATA_TYPES).map(type =>
+                            e('option', { key: type, value: type }, 
+                                type.charAt(0).toUpperCase() + type.slice(1)
+                            )
+                        )
+                    )
+                ),
+                e('button', {
+                    onClick: downloadTemplate,
+                    className: 'w-full px-4 py-2 bg-green-500 text-white rounded hover:bg-green-600 transition-colors'
+                }, 'Download Template')
+            );
+        });
+
+        const ChartRenderer = memo(forwardRef(({ data, type, config = {}, ...props }, ref) => {
+            const chartRef = useRef(null);
+            const containerRef = useRef(null);
+
+            useEffect(() => {
+                if (ref) {
+                    ref.current = containerRef.current;
+                }
+            }, [ref]);
+
+            useEffect(() => {
+                if (!data || data.length === 0) return;
+
+                const container = d3.select(chartRef.current);
+                container.selectAll("*").remove();
+
+                const margin = { top: 20, right: 30, bottom: 40, left: 50 };
+                const width = 800 - margin.left - margin.right;
+                const height = 400 - margin.top - margin.bottom;
+
+                const svg = container
+                    .append("svg")
+                    .attr("width", width + margin.left + margin.right)
+                    .attr("height", height + margin.top + margin.bottom);
+
+                const g = svg.append("g")
+                    .attr("transform", `translate(${margin.left},${margin.top})`);
+
+                switch (type) {
+                    case CHART_TYPES.LINE:
+                        renderLineChart(g, data, width, height, config);
+                        break;
+                    case CHART_TYPES.BAR:
+                        renderBarChart(g, data, width, height, config);
+                        break;
+                    case CHART_TYPES.AREA:
+                        renderAreaChart(g, data, width, height, config);
+                        break;
+                    case CHART_TYPES.SCATTER:
+                        renderScatterChart(g, data, width, height, config);
+                        break;
+                    default:
+                        renderLineChart(g, data, width, height, config);
+                }
+            }, [data, type, config]);
+
+            const renderLineChart = (g, data, width, height, config) => {
+                const xField = config.xField || 'period';
+                const yField = config.yField || 'revenue';
+
+                const x = d3.scaleBand()
+                    .domain(data.map(d => d[xField]))
+                    .range([0, width])
+                    .padding(0.1);
+
+                const y = d3.scaleLinear()
+                    .domain([0, d3.max(data, d => Number(d[yField]) || 0)])
+                    .range([height, 0]);
+
+                const line = d3.line()
+                    .x(d => x(d[xField]) + x.bandwidth() / 2)
+                    .y(d => y(Number(d[yField]) || 0))
+                    .curve(d3.curveMonotoneX);
+
+                g.append("g")
+                    .attr("transform", `translate(0,${height})`)
+                    .call(d3.axisBottom(x));
+
+                g.append("g")
+                    .call(d3.axisLeft(y));
+
+                g.append("path")
+                    .datum(data)
+                    .attr("fill", "none")
+                    .attr("stroke", config.color || "#3b82f6")
+                    .attr("stroke-width", 3)
+                    .attr("d", line);
+
+                g.selectAll(".dot")
+                    .data(data)
+                    .enter().append("circle")
+                    .attr("class", "dot")
+                    .attr("cx", d => x(d[xField]) + x.bandwidth() / 2)
+                    .attr("cy", d => y(Number(d[yField]) || 0))
+                    .attr("r", 6)
+                    .attr("fill", config.color || "#3b82f6");
+            };
+
+            const renderBarChart = (g, data, width, height, config) => {
+                const xField = config.xField || 'period';
+                const yField = config.yField || 'revenue';
+
+                const x = d3.scaleBand()
+                    .domain(data.map(d => d[xField]))
+                    .range([0, width])
+                    .padding(0.1);
+
+                const y = d3.scaleLinear()
+                    .domain([0, d3.max(data, d => Number(d[yField]) || 0)])
+                    .range([height, 0]);
+
+                g.append("g")
+                    .attr("transform", `translate(0,${height})`)
+                    .call(d3.axisBottom(x));
+
+                g.append("g")
+                    .call(d3.axisLeft(y));
+
+                g.selectAll(".bar")
+                    .data(data)
+                    .enter().append("rect")
+                    .attr("class", "bar")
+                    .attr("x", d => x(d[xField]))
+                    .attr("width", x.bandwidth())
+                    .attr("y", d => y(Number(d[yField]) || 0))
+                    .attr("height", d => height - y(Number(d[yField]) || 0))
+                    .attr("fill", config.color || "#10b981");
+            };
+
+            const renderAreaChart = (g, data, width, height, config) => {
+                const xField = config.xField || 'period';
+                const yField = config.yField || 'revenue';
+
+                const x = d3.scaleBand()
+                    .domain(data.map(d => d[xField]))
+                    .range([0, width])
+                    .padding(0.1);
+
+                const y = d3.scaleLinear()
+                    .domain([0, d3.max(data, d => Number(d[yField]) || 0)])
+                    .range([height, 0]);
+
+                const area = d3.area()
+                    .x(d => x(d[xField]) + x.bandwidth() / 2)
+                    .y0(height)
+                    .y1(d => y(Number(d[yField]) || 0))
+                    .curve(d3.curveMonotoneX);
+
+                g.append("g")
+                    .attr("transform", `translate(0,${height})`)
+                    .call(d3.axisBottom(x));
+
+                g.append("g")
+                    .call(d3.axisLeft(y));
+
+                g.append("path")
+                    .datum(data)
+                    .attr("fill", config.color || "#8b5cf6")
+                    .attr("fill-opacity", 0.6)
+                    .attr("d", area);
+            };
+
+            const renderScatterChart = (g, data, width, height, config) => {
+                const xField = config.xField || 'users';
+                const yField = config.yField || 'revenue';
+
+                const x = d3.scaleLinear()
+                    .domain(d3.extent(data, d => Number(d[xField]) || 0))
+                    .range([0, width]);
+
+                const y = d3.scaleLinear()
+                    .domain(d3.extent(data, d => Number(d[yField]) || 0))
+                    .range([height, 0]);
+
+                g.append("g")
+                    .attr("transform", `translate(0,${height})`)
+                    .call(d3.axisBottom(x));
+
+                g.append("g")
+                    .call(d3.axisLeft(y));
+
+                g.selectAll(".dot")
+                    .data(data)
+                    .enter().append("circle")
+                    .attr("class", "dot")
+                    .attr("cx", d => x(Number(d[xField]) || 0))
+                    .attr("cy", d => y(Number(d[yField]) || 0))
+                    .attr("r", 6)
+                    .attr("fill", config.color || "#f59e0b")
+                    .attr("fill-opacity", 0.7);
+            };
+
+            return e('div', { ref: containerRef, className: 'chart-container w-full' },
+                e('div', { ref: chartRef, className: 'w-full h-full' })
+            );
+        }));
+
+        const InsightCard = memo(({ insight, index }) => {
+            const priorityColors = {
+                high: 'border-red-500 bg-red-50',
+                medium: 'border-yellow-500 bg-yellow-50',
+                low: 'border-green-500 bg-green-50'
+            };
+
+            const getPriorityLevel = (priority) => {
+                if (priority > 0.7) return 'high';
+                if (priority > 0.4) return 'medium';
+                return 'low';
+            };
+
+            const priorityLevel = getPriorityLevel(insight.priority);
+
+            return e('div', {
+                className: `p-6 rounded-lg border-l-4 ${priorityColors[priorityLevel]} hover-scale`
+            },
+                e('div', { className: 'flex justify-between items-start mb-3' },
+                    e('h3', { className: 'text-lg font-semibold text-gray-800' }, 
+                        insight.metric.charAt(0).toUpperCase() + insight.metric.slice(1)
+                    ),
+                    e('span', { 
+                        className: `px-2 py-1 text-xs rounded ${
+                            priorityLevel === 'high' ? 'bg-red-200 text-red-800' :
+                            priorityLevel === 'medium' ? 'bg-yellow-200 text-yellow-800' :
+                            'bg-green-200 text-green-800'
+                        }`
+                    }, priorityLevel.toUpperCase())
+                ),
+                e('p', { className: 'text-gray-600 mb-4' }, insight.recommendation),
+                e('div', { className: 'grid grid-cols-2 gap-4 text-sm' },
+                    e('div', null,
+                        e('span', { className: 'font-medium' }, 'Confidence: '),
+                        e('span', null, `${(insight.confidence * 100).toFixed(0)}%`)
+                    ),
+                    e('div', null,
+                        e('span', { className: 'font-medium' }, 'Trend: '),
+                        e('span', { 
+                            className: insight.trend > 0 ? 'text-green-600' : 'text-red-600' 
+                        }, `${insight.trend > 0 ? '+' : ''}${insight.trend.toFixed(2)}%`)
+                    )
+                )
+            );
+        });
+
+        const MetricsDashboard = memo(({ data }) => {
+            const latestData = data[data.length - 1] || {};
+            const previousData = data[data.length - 2] || {};
+
+            const metrics = [
+                {
+                    label: 'Revenue',
+                    value: latestData.revenue || 0,
+                    previous: previousData.revenue || 0,
+                    format: formatCurrency,
+                    icon: '💰'
+                },
+                {
+                    label: 'Users',
+                    value: latestData.users || 0,
+                    previous: previousData.users || 0,
+                    format: (v) => v.toLocaleString(),
+                    icon: '👥'
+                },
+                {
+                    label: 'Conversion',
+                    value: latestData.conversion || 0,
+                    previous: previousData.conversion || 0,
+                    format: formatPercentage,
+                    icon: '📈'
+                },
+                {
+                    label: 'Satisfaction',
+                    value: latestData.satisfaction || 0,
+                    previous: previousData.satisfaction || 0,
+                    format: formatPercentage,
+                    icon: '😊'
+                }
+            ];
+
+            return e('div', { className: 'grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8' },
+                metrics.map(metric => {
+                    const trend = calculateTrend(metric.value, metric.previous);
+                    return e('div', {
+                        key: metric.label,
+                        className: 'bg-white p-6 rounded-lg shadow-lg hover-scale'
+                    },
+                        e('div', { className: 'flex items-center justify-between mb-4' },
+                            e('span', { className: 'text-3xl' }, metric.icon),
+                            e('span', {
+                                className: `text-sm font-medium ${
+                                    trend > 0 ? 'text-green-500' : trend < 0 ? 'text-red-500' : 'text-gray-500'
+                                }`
+                            }, `${trend > 0 ? '+' : ''}${trend.toFixed(1)}%`)
+                        ),
+                        e('h3', { className: 'text-gray-600 text-sm font-medium mb-2' }, metric.label),
+                        e('p', { className: 'text-2xl font-bold text-gray-900' }, metric.format(metric.value))
+                    );
+                })
+            );
+        });
+
+        const ChartControls = memo(({ activeChart, onChartChange, chartConfig, onConfigChange }) => {
+            const chartTypes = [
+                { type: CHART_TYPES.LINE, label: 'Line Chart', icon: '📈' },
+                { type: CHART_TYPES.BAR, label: 'Bar Chart', icon: '📊' },
+                { type: CHART_TYPES.AREA, label: 'Area Chart', icon: '📉' },
+                { type: CHART_TYPES.SCATTER, label: 'Scatter Plot', icon: '🎯' }
+            ];
+
+            return e('div', { className: 'bg-white rounded-lg shadow-lg p-6 mb-6' },
+                e('h3', { className: 'text-lg font-semibold text-gray-800 mb-4' }, 'Chart Configuration'),
+                e('div', { className: 'grid grid-cols-2 md:grid-cols-4 gap-4 mb-6' },
+                    chartTypes.map(chart =>
+                        e('button', {
+                            key: chart.type,
+                            className: `p-3 rounded-lg border transition-colors ${
+                                activeChart === chart.type 
+                                    ? 'border-blue-500 bg-blue-50 text-blue-700' 
+                                    : 'border-gray-300 hover:border-gray-400'
+                            }`,
+                            onClick: () => onChartChange(chart.type)
+                        },
+                            e('div', { className: 'text-2xl mb-2' }, chart.icon),
+                            e('div', { className: 'text-sm font-medium' }, chart.label)
+                        )
+                    )
+                ),
+                e('div', { className: 'grid grid-cols-1 md:grid-cols-3 gap-4' },
+                    e('div', null,
+                        e('label', { className: 'block text-sm font-medium text-gray-700 mb-2' }, 'X-Axis Field'),
+                        e('select', {
+                            value: chartConfig.xField || 'period',
+                            onChange: (e) => onConfigChange({ ...chartConfig, xField: e.target.value }),
+                            className: 'w-full p-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500'
+                        },
+                            e('option', { value: 'period' }, 'Period'),
+                            e('option', { value: 'category' }, 'Category'),
+                            e('option', { value: 'region' }, 'Region')
+                        )
+                    ),
+                    e('div', null,
+                        e('label', { className: 'block text-sm font-medium text-gray-700 mb-2' }, 'Y-Axis Field'),
+                        e('select', {
+                            value: chartConfig.yField || 'revenue',
+                            onChange: (e) => onConfigChange({ ...chartConfig, yField: e.target.value }),
+                            className: 'w-full p-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500'
+                        },
+                            e('option', { value: 'revenue' }, 'Revenue'),
+                            e('option', { value: 'users' }, 'Users'),
+                            e('option', { value: 'conversion' }, 'Conversion'),
+                            e('option', { value: 'satisfaction' }, 'Satisfaction')
+                        )
+                    ),
+                    e('div', null,
+                        e('label', { className: 'block text-sm font-medium text-gray-700 mb-2' }, 'Chart Color'),
+                        e('input', {
+                            type: 'color',
+                            value: chartConfig.color || '#3b82f6',
+                            onChange: (e) => onConfigChange({ ...chartConfig, color: e.target.value }),
+                            className: 'w-full h-10 border border-gray-300 rounded-md'
+                        })
+                    )
+                )
+            );
+        });
+
+        // ====================== MAIN APPLICATION ======================
+        const AnalyticsApp = () => {
+            const { data, insights, isProcessing, processData, setData } = useAnalyticsData();
+            const [activeChart, setActiveChart] = useState(CHART_TYPES.LINE);
+            const [chartConfig, setChartConfig] = useState({
+                xField: 'period',
+                yField: 'revenue',
+                color: '#3b82f6'
+            });
+            const [isGeneratingReport, setIsGeneratingReport] = useState(false);
+            
+            const chartRefs = [useRef(null), useRef(null), useRef(null)];
+
+            useEffect(() => {
+                if (data.length === 0) {
+                    const sampleData = DataProcessor.generateSampleData(DATA_TYPES.SALES, 12);
+                    processData(sampleData);
+                }
+            }, [data.length, processData]);
+
+            const handleDataUpload = useCallback((uploadedData) => {
+                processData(uploadedData);
+            }, [processData]);
+
+            const generateComprehensiveReport = useCallback(async () => {
+                setIsGeneratingReport(true);
+                try {
+                    const pdf = await ReportGenerator.generateComprehensiveReport(
+                        data, 
+                        insights, 
+                        chartRefs
+                    );
+                    pdf.save(`analytics-report-${new Date().toISOString().split('T')[0]}.pdf`);
+                } catch (error) {
+                    console.error('Report generation failed:', error);
+                    alert('Failed to generate report. Please try again.');
+                } finally {
+                    setIsGeneratingReport(false);
+                }
+            }, [data, insights, chartRefs]);
+
+            if (data.length === 0 && !isProcessing) {
+                return e('div', { className: 'min-h-screen bg-gray-100 p-6' },
+                    e('div', { className: 'max-w-4xl mx-auto' },
+                        e('div', { className: 'text-center mb-8' },
+                            e('h1', { className: 'text-4xl font-bold text-gray-800 mb-4' }, 'Enterprise Analytics Dashboard'),
+                            e('p', { className: 'text-xl text-gray-600' }, 'Upload your data to get started with advanced analytics')
+                        ),
+                        e('div', { className: 'grid md:grid-cols-2 gap-8' },
+                            e(FileUploader, { onDataUpload: handleDataUpload }),
+                            e(TemplateDownloader, null)
+                        )
+                    )
+                );
+            }
+
+            return e('div', { className: 'min-h-screen bg-gray-100' },
+                // Header
+                e('header', { className: 'gradient-bg text-white p-6 shadow-lg' },
+                    e('div', { className: 'max-w-7xl mx-auto' },
+                        e('div', { className: 'flex justify-between items-center' },
+                            e('div', null,
+                                e('h1', { className: 'text-3xl font-bold mb-2' }, 'Enterprise Analytics Dashboard'),
+                                e('p', { className: 'text-blue-100' }, 'Advanced Business Intelligence & Predictive Analytics')
+                            ),
+                            e('div', { className: 'flex gap-4' },
+                                e('button', {
+                                    className: 'px-4 py-2 bg-white bg-opacity-20 text-white rounded-lg hover:bg-opacity-30 transition-colors',
+                                    onClick: () => setData([])
+                                }, 'New Analysis'),
+                                e('button', {
+                                    className: 'px-4 py-2 bg-green-500 text-white rounded-lg hover:bg-green-600 transition-colors',
+                                    onClick: generateComprehensiveReport,
+                                    disabled: isGeneratingReport
+                                }, isGeneratingReport ? 'Generating...' : 'Export Report')
+                            )
+                        )
+                    )
+                ),
+
+                // Main Content
+                e('main', { className: 'max-w-7xl mx-auto p-6' },
+                    // Metrics Dashboard
+                    e(MetricsDashboard, { data }),
+
+                    // Insights Section
+                    insights.length > 0 && e('div', { className: 'mb-8' },
+                        e('h2', { className: 'text-2xl font-bold text-gray-800 mb-6' }, '🤖 AI-Powered Insights'),
+                        e('div', { className: 'grid md:grid-cols-2 lg:grid-cols-3 gap-6' },
+                            insights.slice(0, 6).map((insight, index) =>
+                                e(InsightCard, { key: insight.id, insight, index })
+                            )
+                        )
+                    ),
+
+                    // Chart Controls and Visualization
+                    e(ChartControls, {
+                        activeChart,
+                        onChartChange: setActiveChart,
+                        chartConfig,
+                        onConfigChange: setChartConfig
+                    }),
+
+                    // Chart Display
+                    e('div', { className: 'bg-white rounded-lg shadow-lg p-6 mb-8' },
+                        e('h3', { className: 'text-lg font-semibold text-gray-800 mb-4' }, 'Data Visualization'),
+                        e(ChartRenderer, {
+                            ref: chartRefs[0],
+                            data,
+                            type: activeChart,
+                            config: chartConfig
+                        })
+                    ),
+
+                    // Additional Charts for Report
+                    data.length > 0 && e('div', { className: 'grid md:grid-cols-2 gap-6 mb-8' },
+                        e('div', { className: 'bg-white rounded-lg shadow-lg p-6' },
+                            e('h3', { className: 'text-lg font-semibold text-gray-800 mb-4' }, 'Trend Analysis'),
+                            e(ChartRenderer, {
+                                ref: chartRefs[1],
+                                data,
+                                type: CHART_TYPES.AREA,
+                                config: { ...chartConfig, color: '#10b981' }
+                            })
+                        ),
+                        e('div', { className: 'bg-white rounded-lg shadow-lg p-6' },
+                            e('h3', { className: 'text-lg font-semibold text-gray-800 mb-4' }, 'Correlation View'),
+                            e(ChartRenderer, {
+                                ref: chartRefs[2],
+                                data,
+                                type: CHART_TYPES.SCATTER,
+                                config: { xField: 'users', yField: 'revenue', color: '#f59e0b' }
+                            })
+                        )
+                    ),
+
+                    // Data Upload Section
+                    e('div', { className: 'grid md:grid-cols-2 gap-8' },
+                        e('div', { className: 'bg-white rounded-lg shadow-lg p-6' },
+                            e('h3', { className: 'text-lg font-semibold text-gray-800 mb-4' }, 'Upload New Data'),
+                            e(FileUploader, { onDataUpload: handleDataUpload })
+                        ),
+                        e(TemplateDownloader, null)
+                    )
+                )
+            );
+        };
+
+        // Wrap main app with HOCs
+        const EnhancedAnalyticsApp = withErrorBoundary(withLoading(AnalyticsApp));
+
+        // Render Application
+        ReactDOM.render(
+            e(EnhancedAnalyticsApp, { isLoading: false }),
+            document.getElementById('root')
+        );
+    </script>
+</body>
+</html>

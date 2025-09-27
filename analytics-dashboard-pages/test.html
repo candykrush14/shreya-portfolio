@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>Debug Test</title>
+    <script crossorigin src="https://unpkg.com/react@18/umd/react.development.js"></script>
+    <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"></script>
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body>
+    <div id="root">Loading...</div>
+    
+    <script type="text/babel">
+        const { useState } = React;
+        
+        const TestApp = () => {
+            const [message, setMessage] = useState('React is working!');
+            
+            return React.createElement('div', {
+                className: 'p-8 bg-blue-100 text-center'
+            }, 
+                React.createElement('h1', {
+                    className: 'text-2xl font-bold text-blue-800'
+                }, message),
+                React.createElement('button', {
+                    className: 'mt-4 px-4 py-2 bg-blue-500 text-white rounded',
+                    onClick: () => setMessage('Button clicked! React is working properly.')
+                }, 'Test Button')
+            );
+        };
+        
+        console.log('Starting React test...');
+        const root = ReactDOM.createRoot(document.getElementById('root'));
+        root.render(React.createElement(TestApp));
+        console.log('React test rendered!');
+    </script>
+</body>
+</html>

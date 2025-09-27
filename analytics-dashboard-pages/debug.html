@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Debug Dashboard</title>
+    <script src="https://unpkg.com/react@18/umd/react.development.js"></script>
+    <script src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"></script>
+    <script src="https://d3js.org/d3.v7.min.js"></script>
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body>
+    <div id="root"></div>
+
+    <script type="text/babel">
+        const { useState, useEffect, useRef, useMemo, useCallback, memo, forwardRef } = React;
+        const e = React.createElement;
+
+        const DebugApp = () => {
+            const [error, setError] = useState(null);
+
+            try {
+                return e('div', { className: 'p-8' },
+                    e('h1', { className: 'text-2xl font-bold mb-4' }, 'Debug Test'),
+                    e('p', null, 'React is working!'),
+                    error && e('div', { className: 'bg-red-100 p-4 rounded mt-4' },
+                        e('h3', { className: 'font-bold text-red-800' }, 'Error:'),
+                        e('pre', { className: 'text-red-600' }, error.toString())
+                    )
+                );
+            } catch (err) {
+                setError(err);
+                return e('div', { className: 'p-8 bg-red-100' },
+                    e('h1', { className: 'text-xl font-bold text-red-800' }, 'Error Caught:'),
+                    e('pre', { className: 'text-red-600' }, err.toString())
+                );
+            }
+        };
+
+        ReactDOM.render(e(DebugApp), document.getElementById('root'));
+    </script>
+</body>
+</html>

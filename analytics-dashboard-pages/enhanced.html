@@ -1,0 +1,611 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI-Powered Analytics Dashboard</title>
+    <script src="https://unpkg.com/react@18/umd/react.development.js"></script>
+    <script src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"></script>
+    <script src="https://d3js.org/d3.v7.min.js"></script>
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+    <script src="https://unpkg.com/jspdf@2.5.1/dist/jspdf.umd.min.js"></script>
+    <script src="https://unpkg.com/html2canvas@1.4.1/dist/html2canvas.min.js"></script>
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body>
+    <div id="root"></div>
+
+    <script type="text/babel">
+        const { useState, useEffect, createElement } = React;
+
+        // AI-powered Analytics Service
+        const AnalyticsAI = {
+            generateInsights: (data) => {
+                const latest = data[data.length - 1];
+                const previous = data[data.length - 2];
+                
+                // Calculate trends
+                const revenueChange = ((latest.revenue - previous.revenue) / previous.revenue * 100).toFixed(1);
+                const userChange = ((latest.users - previous.users) / previous.users * 100).toFixed(1);
+                const conversionChange = ((latest.conversion - previous.conversion) / previous.conversion * 100).toFixed(1);
+                
+                // Generate AI insights
+                const insights = [
+                    {
+                        type: 'revenue',
+                        title: 'Revenue Trend Analysis',
+                        insight: revenueChange > 0 
+                            ? `Revenue increased by ${revenueChange}% month-over-month. Strong performance suggests effective marketing campaigns.`
+                            : `Revenue declined by ${Math.abs(revenueChange)}% month-over-month. Consider reviewing pricing strategy and customer retention programs.`,
+                        confidence: 0.87,
+                        impact: revenueChange > 5 ? 'high' : revenueChange > 0 ? 'medium' : 'critical'
+                    },
+                    {
+                        type: 'users',
+                        title: 'User Growth Pattern',
+                        insight: userChange > 0
+                            ? `User base grew by ${userChange}% this month. Acquisition channels are performing well.`
+                            : `User growth slowed with a ${Math.abs(userChange)}% decline. Focus on user acquisition and retention strategies.`,
+                        confidence: 0.82,
+                        impact: userChange > 10 ? 'high' : userChange > 0 ? 'medium' : 'critical'
+                    },
+                    {
+                        type: 'conversion',
+                        title: 'Conversion Optimization',
+                        insight: conversionChange > 0
+                            ? `Conversion rate improved by ${conversionChange}%. User experience enhancements are paying off.`
+                            : `Conversion rate dropped by ${Math.abs(conversionChange)}%. Review checkout process and user journey.`,
+                        confidence: 0.91,
+                        impact: Math.abs(conversionChange) > 5 ? 'high' : 'medium'
+                    }
+                ];
+                
+                return insights;
+            },
+            
+            predictTrends: (data) => {
+                // Simple linear regression for trend prediction
+                const revenueData = data.map((d, i) => ({ x: i, y: d.revenue }));
+                const n = revenueData.length;
+                const sumX = revenueData.reduce((sum, d) => sum + d.x, 0);
+                const sumY = revenueData.reduce((sum, d) => sum + d.y, 0);
+                const sumXY = revenueData.reduce((sum, d) => sum + d.x * d.y, 0);
+                const sumXX = revenueData.reduce((sum, d) => sum + d.x * d.x, 0);
+                
+                const slope = (n * sumXY - sumX * sumY) / (n * sumXX - sumX * sumX);
+                const intercept = (sumY - slope * sumX) / n;
+                
+                const nextMonthRevenue = slope * n + intercept;
+                const growth = ((nextMonthRevenue - data[data.length - 1].revenue) / data[data.length - 1].revenue * 100).toFixed(1);
+                
+                return {
+                    nextMonth: {
+                        revenue: Math.round(nextMonthRevenue),
+                        growth: growth,
+                        confidence: 0.78
+                    },
+                    trend: slope > 0 ? 'upward' : 'downward',
+                    recommendation: slope > 0 
+                        ? 'Continue current strategies. Consider scaling successful campaigns.'
+                        : 'Implement growth strategies immediately. Focus on customer retention and acquisition.'
+                };
+            }
+        };
+
+        // External Data Integration
+        const DataSources = {
+            async fetchExternalData() {
+                try {
+                    // Simulate multiple data sources
+                    const [apiData, githubData] = await Promise.all([
+                        fetch('https://jsonplaceholder.typicode.com/posts?_limit=5'),
+                        fetch('https://api.github.com/repos/microsoft/vscode/contributors?per_page=5')
+                    ]);
+                    
+                    const posts = await apiData.json();
+                    const contributors = await githubData.json();
+                    
+                    // Transform external data into analytics format
+                    const externalMetrics = posts.map((post, index) => ({
+                        month: ['Jan', 'Feb', 'Mar', 'Apr', 'May'][index],
+                        revenue: post.id * 5000 + Math.random() * 10000,
+                        users: post.userId * 200 + Math.random() * 500,
+                        conversion: 2 + Math.random() * 4,
+                        category: ['Technology', 'Healthcare', 'Finance', 'Retail', 'Education'][index],
+                        growth: (Math.random() * 20 - 10).toFixed(1),
+                        satisfaction: (80 + Math.random() * 15).toFixed(1),
+                        churn: (1 + Math.random() * 2).toFixed(1),
+                        timestamp: new Date().toISOString(),
+                        acquisitionCost: 40 + Math.random() * 40,
+                        lifetimeValue: 300 + Math.random() * 200,
+                        source: 'External API'
+                    }));
+                    
+                    return {
+                        metrics: externalMetrics,
+                        contributors: contributors.slice(0, 3).map(c => ({
+                            name: c.login,
+                            contributions: c.contributions,
+                            avatar: c.avatar_url
+                        }))
+                    };
+                } catch (error) {
+                    console.log('External data unavailable, using generated data');
+                    return null;
+                }
+            }
+        };
+
+        // Sample data - Enhanced with more fields
+        const SAMPLE_DATA = [
+            { month: 'Jan', revenue: 50000, users: 1200, conversion: 3.5, category: 'Technology', growth: '5.0', satisfaction: '85.0', churn: '2.1', timestamp: new Date(2024, 0, 1).toISOString(), acquisitionCost: 75, lifetimeValue: 400, source: 'Generated' },
+            { month: 'Feb', revenue: 55000, users: 1350, conversion: 4.2, category: 'Healthcare', growth: '10.0', satisfaction: '87.5', churn: '1.8', timestamp: new Date(2024, 1, 1).toISOString(), acquisitionCost: 68, lifetimeValue: 420, source: 'Generated' },
+            { month: 'Mar', revenue: 48000, users: 1180, conversion: 3.8, category: 'Finance', growth: '-12.7', satisfaction: '82.1', churn: '2.5', timestamp: new Date(2024, 2, 1).toISOString(), acquisitionCost: 82, lifetimeValue: 380, source: 'Generated' },
+            { month: 'Apr', revenue: 62000, users: 1450, conversion: 4.8, category: 'Retail', growth: '29.2', satisfaction: '89.3', churn: '1.9', timestamp: new Date(2024, 3, 1).toISOString(), acquisitionCost: 65, lifetimeValue: 450, source: 'Generated' },
+            { month: 'May', revenue: 58000, users: 1320, conversion: 4.5, category: 'Education', growth: '-6.5', satisfaction: '88.7', churn: '2.0', timestamp: new Date(2024, 4, 1).toISOString(), acquisitionCost: 70, lifetimeValue: 410, source: 'Generated' },
+            { month: 'Jun', revenue: 65000, users: 1520, conversion: 5.1, category: 'Technology', growth: '12.1', satisfaction: '91.2', churn: '1.6', timestamp: new Date(2024, 5, 1).toISOString(), acquisitionCost: 62, lifetimeValue: 480, source: 'Generated' },
+            { month: 'Jul', revenue: 72000, users: 1680, conversion: 5.4, category: 'Healthcare', growth: '10.8', satisfaction: '92.5', churn: '1.4', timestamp: new Date(2024, 6, 1).toISOString(), acquisitionCost: 58, lifetimeValue: 520, source: 'Generated' },
+            { month: 'Aug', revenue: 69000, users: 1590, conversion: 5.2, category: 'Finance', growth: '-4.2', satisfaction: '90.8', churn: '1.7', timestamp: new Date(2024, 7, 1).toISOString(), acquisitionCost: 67, lifetimeValue: 495, source: 'Generated' },
+            { month: 'Sep', revenue: 75000, users: 1750, conversion: 5.6, category: 'Retail', growth: '8.7', satisfaction: '93.1', churn: '1.3', timestamp: new Date(2024, 8, 1).toISOString(), acquisitionCost: 55, lifetimeValue: 540, source: 'Generated' },
+            { month: 'Oct', revenue: 78000, users: 1820, conversion: 5.8, category: 'Education', growth: '4.0', satisfaction: '94.2', churn: '1.2', timestamp: new Date(2024, 9, 1).toISOString(), acquisitionCost: 52, lifetimeValue: 565, source: 'Generated' },
+            { month: 'Nov', revenue: 82000, users: 1950, conversion: 6.1, category: 'Technology', growth: '5.1', satisfaction: '95.3', churn: '1.1', timestamp: new Date(2024, 10, 1).toISOString(), acquisitionCost: 48, lifetimeValue: 590, source: 'Generated' },
+            { month: 'Dec', revenue: 85000, users: 2020, conversion: 6.3, category: 'Healthcare', growth: '3.7', satisfaction: '96.1', churn: '1.0', timestamp: new Date(2024, 11, 1).toISOString(), acquisitionCost: 45, lifetimeValue: 615, source: 'Generated' }
+        ];
+
+        function AnalyticsDashboard() {
+            const [data, setData] = useState(SAMPLE_DATA);
+            const [activeChart, setActiveChart] = useState('line');
+            const [insights, setInsights] = useState([]);
+            const [predictions, setPredictions] = useState(null);
+            const [externalData, setExternalData] = useState(null);
+            const [isLoading, setIsLoading] = useState(false);
+            const [donutView, setDonutView] = useState('revenue');
+
+            useEffect(() => {
+                // Generate AI insights
+                const aiInsights = AnalyticsAI.generateInsights(data);
+                setInsights(aiInsights);
+                
+                // Generate predictions
+                const predictions = AnalyticsAI.predictTrends(data);
+                setPredictions(predictions);
+                
+                // Fetch external data
+                loadExternalData();
+            }, [data]);
+
+            const loadExternalData = async () => {
+                setIsLoading(true);
+                const external = await DataSources.fetchExternalData();
+                if (external) {
+                    setExternalData(external);
+                }
+                setIsLoading(false);
+            };
+
+            const generatePDF = async () => {
+                const { jsPDF } = window.jspdf;
+                const pdf = new jsPDF();
+                
+                // Title page
+                pdf.setFontSize(24);
+                pdf.text('Analytics Dashboard Report', 20, 30);
+                pdf.setFontSize(12);
+                pdf.text('Generated on: ' + new Date().toLocaleDateString(), 20, 45);
+                
+                // Executive Summary
+                pdf.setFontSize(16);
+                pdf.text('Executive Summary', 20, 65);
+                pdf.setFontSize(10);
+                
+                let yPos = 80;
+                const latestData = data[data.length - 1];
+                pdf.text(`Total Revenue: $${latestData.revenue.toLocaleString()}`, 20, yPos);
+                pdf.text(`Active Users: ${latestData.users.toLocaleString()}`, 20, yPos + 10);
+                pdf.text(`Conversion Rate: ${latestData.conversion}%`, 20, yPos + 20);
+                pdf.text(`Customer Satisfaction: ${latestData.satisfaction}%`, 20, yPos + 30);
+                
+                // AI Insights
+                yPos += 50;
+                pdf.setFontSize(16);
+                pdf.text('AI-Powered Insights', 20, yPos);
+                pdf.setFontSize(10);
+                
+                insights.forEach((insight, index) => {
+                    yPos += 15;
+                    if (yPos > 250) {
+                        pdf.addPage();
+                        yPos = 20;
+                    }
+                    pdf.setFontSize(12);
+                    pdf.text(insight.title, 20, yPos);
+                    pdf.setFontSize(10);
+                    const splitText = pdf.splitTextToSize(insight.insight, 170);
+                    pdf.text(splitText, 20, yPos + 8);
+                    yPos += splitText.length * 5 + 5;
+                });
+                
+                // Predictions
+                if (predictions) {
+                    if (yPos > 200) {
+                        pdf.addPage();
+                        yPos = 20;
+                    } else {
+                        yPos += 20;
+                    }
+                    
+                    pdf.setFontSize(16);
+                    pdf.text('Trend Predictions', 20, yPos);
+                    pdf.setFontSize(10);
+                    yPos += 15;
+                    pdf.text(`Next Month Revenue Forecast: $${predictions.nextMonth.revenue.toLocaleString()}`, 20, yPos);
+                    pdf.text(`Expected Growth: ${predictions.nextMonth.growth}%`, 20, yPos + 10);
+                    pdf.text(`Confidence Level: ${(predictions.nextMonth.confidence * 100).toFixed(0)}%`, 20, yPos + 20);
+                    pdf.text(`Trend Direction: ${predictions.trend}`, 20, yPos + 30);
+                    
+                    yPos += 40;
+                    pdf.setFontSize(12);
+                    pdf.text('Recommendation:', 20, yPos);
+                    pdf.setFontSize(10);
+                    const recText = pdf.splitTextToSize(predictions.recommendation, 170);
+                    pdf.text(recText, 20, yPos + 8);
+                }
+                
+                // Chart capture
+                try {
+                    const chartElement = document.querySelector('#chart svg');
+                    if (chartElement) {
+                        const canvas = await html2canvas(chartElement);
+                        const imgData = canvas.toDataURL('image/png');
+                        pdf.addPage();
+                        pdf.setFontSize(16);
+                        pdf.text('Data Visualization', 20, 20);
+                        pdf.addImage(imgData, 'PNG', 20, 30, 170, 100);
+                    }
+                } catch (error) {
+                    console.log('Chart capture failed:', error);
+                }
+                
+                // External Data Summary
+                if (externalData) {
+                    pdf.addPage();
+                    pdf.setFontSize(16);
+                    pdf.text('External Data Integration', 20, 20);
+                    pdf.setFontSize(10);
+                    pdf.text('Successfully integrated with external APIs:', 20, 35);
+                    pdf.text(`- JSONPlaceholder API: ${externalData.metrics.length} data points`, 25, 45);
+                    pdf.text(`- GitHub API: ${externalData.contributors.length} contributors`, 25, 55);
+                }
+                
+                pdf.save('analytics-report.pdf');
+            };
+
+            useEffect(() => {
+                if (activeChart === 'line') {
+                    createLineChart();
+                } else if (activeChart === 'bar') {
+                    createBarChart();
+                } else if (activeChart === 'donut') {
+                    createDonutChart();
+                }
+            }, [activeChart, data, donutView]);
+
+            const createLineChart = () => {
+                d3.select("#chart").selectAll("*").remove();
+                
+                const margin = { top: 20, right: 30, bottom: 40, left: 50 };
+                const width = 800 - margin.left - margin.right;
+                const height = 400 - margin.top - margin.bottom;
+                
+                const svg = d3.select("#chart")
+                    .append("svg")
+                    .attr("width", width + margin.left + margin.right)
+                    .attr("height", height + margin.top + margin.bottom);
+                
+                const g = svg.append("g")
+                    .attr("transform", `translate(${margin.left},${margin.top})`);
+                
+                const x = d3.scaleBand()
+                    .domain(data.map(d => d.month))
+                    .range([0, width])
+                    .padding(0.1);
+                
+                const y = d3.scaleLinear()
+                    .domain([0, d3.max(data, d => d.revenue)])
+                    .range([height, 0]);
+                
+                const line = d3.line()
+                    .x(d => x(d.month) + x.bandwidth() / 2)
+                    .y(d => y(d.revenue))
+                    .curve(d3.curveMonotoneX);
+                
+                g.append("g")
+                    .attr("transform", `translate(0,${height})`)
+                    .call(d3.axisBottom(x));
+                
+                g.append("g")
+                    .call(d3.axisLeft(y));
+                
+                g.append("path")
+                    .datum(data)
+                    .attr("fill", "none")
+                    .attr("stroke", "#3b82f6")
+                    .attr("stroke-width", 3)
+                    .attr("d", line);
+                
+                g.selectAll(".dot")
+                    .data(data)
+                    .enter().append("circle")
+                    .attr("class", "dot")
+                    .attr("cx", d => x(d.month) + x.bandwidth() / 2)
+                    .attr("cy", d => y(d.revenue))
+                    .attr("r", 6)
+                    .attr("fill", "#3b82f6");
+            };
+
+            const createBarChart = () => {
+                d3.select("#chart").selectAll("*").remove();
+                
+                const margin = { top: 20, right: 30, bottom: 40, left: 50 };
+                const width = 800 - margin.left - margin.right;
+                const height = 400 - margin.top - margin.bottom;
+                
+                const svg = d3.select("#chart")
+                    .append("svg")
+                    .attr("width", width + margin.left + margin.right)
+                    .attr("height", height + margin.top + margin.bottom);
+                
+                const g = svg.append("g")
+                    .attr("transform", `translate(${margin.left},${margin.top})`);
+                
+                const x = d3.scaleBand()
+                    .domain(data.map(d => d.month))
+                    .range([0, width])
+                    .padding(0.1);
+                
+                const y = d3.scaleLinear()
+                    .domain([0, d3.max(data, d => d.users)])
+                    .range([height, 0]);
+                
+                g.append("g")
+                    .attr("transform", `translate(0,${height})`)
+                    .call(d3.axisBottom(x));
+                
+                g.append("g")
+                    .call(d3.axisLeft(y));
+                
+                g.selectAll(".bar")
+                    .data(data)
+                    .enter().append("rect")
+                    .attr("class", "bar")
+                    .attr("x", d => x(d.month))
+                    .attr("width", x.bandwidth())
+                    .attr("y", d => y(d.users))
+                    .attr("height", d => height - y(d.users))
+                    .attr("fill", "#10b981");
+            };
+
+            const createDonutChart = () => {
+                d3.select("#chart").selectAll("*").remove();
+                
+                const width = 500;
+                const height = 400;
+                const radius = Math.min(width, height) / 2 - 40;
+                
+                const svg = d3.select("#chart")
+                    .append("svg")
+                    .attr("width", width)
+                    .attr("height", height);
+                
+                const g = svg.append("g")
+                    .attr("transform", `translate(${width/2},${height/2})`);
+                
+                let pieData;
+                if (donutView === 'revenue') {
+                    pieData = data.map(d => ({ label: d.month, value: d.revenue }));
+                } else if (donutView === 'users') {
+                    pieData = data.map(d => ({ label: d.month, value: d.users }));
+                } else if (donutView === 'category') {
+                    const categoryData = {};
+                    data.forEach(d => {
+                        categoryData[d.category] = (categoryData[d.category] || 0) + d.revenue;
+                    });
+                    pieData = Object.entries(categoryData).map(([key, value]) => ({ label: key, value }));
+                }
+                
+                const color = d3.scaleOrdinal()
+                    .domain(pieData.map(d => d.label))
+                    .range(['#3b82f6', '#10b981', '#f59e0b', '#ef4444', '#8b5cf6', '#06b6d4', '#84cc16', '#f97316', '#ec4899', '#6366f1', '#14b8a6', '#f43f5e']);
+                
+                const pie = d3.pie()
+                    .value(d => d.value)
+                    .sort(null);
+                
+                const arc = d3.arc()
+                    .innerRadius(radius * 0.4)
+                    .outerRadius(radius);
+                
+                const arcs = g.selectAll(".arc")
+                    .data(pie(pieData))
+                    .enter().append("g")
+                    .attr("class", "arc");
+                
+                arcs.append("path")
+                    .attr("d", arc)
+                    .attr("fill", d => color(d.data.label));
+                
+                arcs.append("text")
+                    .attr("transform", d => `translate(${arc.centroid(d)})`)
+                    .attr("text-anchor", "middle")
+                    .attr("font-size", "12px")
+                    .attr("fill", "white")
+                    .text(d => d.data.label);
+            };
+
+            return createElement('div', { className: 'min-h-screen bg-gray-100 p-6' },
+                createElement('div', { className: 'max-w-7xl mx-auto' },
+                    // Header
+                    createElement('div', { className: 'bg-white rounded-lg shadow-lg p-6 mb-6' },
+                        createElement('h1', { className: 'text-3xl font-bold text-gray-800 mb-2' }, 'AI-Powered Analytics Dashboard'),
+                        createElement('p', { className: 'text-gray-600 mb-4' }, 'Advanced analytics with machine learning insights and external data integration'),
+                        createElement('div', { className: 'flex flex-wrap gap-4' },
+                            createElement('button', 
+                                { 
+                                    className: 'bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600 transition-colors',
+                                    onClick: generatePDF 
+                                }, 
+                                'Download Report'
+                            ),
+                            createElement('button', 
+                                { 
+                                    className: 'bg-green-500 text-white px-4 py-2 rounded hover:bg-green-600 transition-colors',
+                                    onClick: loadExternalData 
+                                }, 
+                                isLoading ? 'Loading...' : 'Refresh External Data'
+                            ),
+                            externalData && createElement('span', 
+                                { className: 'bg-green-100 text-green-800 px-3 py-2 rounded' }, 
+                                '✓ External APIs Connected'
+                            )
+                        )
+                    ),
+                    
+                    // Insights Panel
+                    insights.length > 0 && createElement('div', { className: 'bg-white rounded-lg shadow-lg p-6 mb-6' },
+                        createElement('h2', { className: 'text-xl font-bold text-gray-800 mb-4' }, '🤖 AI-Generated Insights'),
+                        createElement('div', { className: 'grid md:grid-cols-3 gap-4' },
+                            insights.map((insight, index) =>
+                                createElement('div', 
+                                    { 
+                                        key: index, 
+                                        className: `p-4 rounded-lg border-l-4 ${
+                                            insight.impact === 'high' ? 'border-green-500 bg-green-50' : 
+                                            insight.impact === 'medium' ? 'border-yellow-500 bg-yellow-50' : 
+                                            'border-red-500 bg-red-50'
+                                        }`
+                                    },
+                                    createElement('h3', { className: 'font-semibold text-gray-800 mb-2' }, insight.title),
+                                    createElement('p', { className: 'text-sm text-gray-600 mb-2' }, insight.insight),
+                                    createElement('div', { className: 'text-xs text-gray-500' },
+                                        `Confidence: ${(insight.confidence * 100).toFixed(0)}% | Impact: ${insight.impact}`
+                                    )
+                                )
+                            )
+                        )
+                    ),
+                    
+                    // Predictions Panel
+                    predictions && createElement('div', { className: 'bg-white rounded-lg shadow-lg p-6 mb-6' },
+                        createElement('h2', { className: 'text-xl font-bold text-gray-800 mb-4' }, '📈 Trend Predictions'),
+                        createElement('div', { className: 'grid md:grid-cols-2 gap-6' },
+                            createElement('div', { className: 'space-y-3' },
+                                createElement('h3', { className: 'font-semibold text-gray-800' }, 'Next Month Forecast'),
+                                createElement('div', { className: 'text-2xl font-bold text-blue-600' }, 
+                                    `$${predictions.nextMonth.revenue.toLocaleString()}`
+                                ),
+                                createElement('div', { className: `text-sm ${predictions.nextMonth.growth > 0 ? 'text-green-600' : 'text-red-600'}` },
+                                    `${predictions.nextMonth.growth}% growth expected`
+                                )
+                            ),
+                            createElement('div', { className: 'space-y-3' },
+                                createElement('h3', { className: 'font-semibold text-gray-800' }, 'Recommendation'),
+                                createElement('p', { className: 'text-sm text-gray-600' }, predictions.recommendation)
+                            )
+                        )
+                    ),
+                    
+                    // Chart Controls
+                    createElement('div', { className: 'bg-white rounded-lg shadow-lg p-6 mb-6' },
+                        createElement('div', { className: 'flex flex-wrap gap-4 mb-4' },
+                            createElement('button', 
+                                { 
+                                    className: `px-4 py-2 rounded ${activeChart === 'line' ? 'bg-blue-500 text-white' : 'bg-gray-200 text-gray-700'}`,
+                                    onClick: () => setActiveChart('line') 
+                                }, 
+                                'Line Chart'
+                            ),
+                            createElement('button', 
+                                { 
+                                    className: `px-4 py-2 rounded ${activeChart === 'bar' ? 'bg-blue-500 text-white' : 'bg-gray-200 text-gray-700'}`,
+                                    onClick: () => setActiveChart('bar') 
+                                }, 
+                                'Bar Chart'
+                            ),
+                            createElement('button', 
+                                { 
+                                    className: `px-4 py-2 rounded ${activeChart === 'donut' ? 'bg-blue-500 text-white' : 'bg-gray-200 text-gray-700'}`,
+                                    onClick: () => setActiveChart('donut') 
+                                }, 
+                                'Donut Chart'
+                            )
+                        ),
+                        
+                        // Donut Chart Controls
+                        activeChart === 'donut' && createElement('div', { className: 'flex gap-2 mb-4' },
+                            createElement('button', 
+                                { 
+                                    className: `px-3 py-1 text-sm rounded ${donutView === 'revenue' ? 'bg-blue-500 text-white' : 'bg-gray-200 text-gray-700'}`,
+                                    onClick: () => setDonutView('revenue') 
+                                }, 
+                                'Revenue'
+                            ),
+                            createElement('button', 
+                                { 
+                                    className: `px-3 py-1 text-sm rounded ${donutView === 'users' ? 'bg-blue-500 text-white' : 'bg-gray-200 text-gray-700'}`,
+                                    onClick: () => setDonutView('users') 
+                                }, 
+                                'Users'
+                            ),
+                            createElement('button', 
+                                { 
+                                    className: `px-3 py-1 text-sm rounded ${donutView === 'category' ? 'bg-blue-500 text-white' : 'bg-gray-200 text-gray-700'}`,
+                                    onClick: () => setDonutView('category') 
+                                }, 
+                                'Categories'
+                            )
+                        ),
+                        
+                        createElement('div', { id: 'chart' })
+                    ),
+                    
+                    // External Data Display
+                    externalData && createElement('div', { className: 'bg-white rounded-lg shadow-lg p-6' },
+                        createElement('h2', { className: 'text-xl font-bold text-gray-800 mb-4' }, '🔗 External Data Integration'),
+                        createElement('div', { className: 'grid md:grid-cols-2 gap-6' },
+                            createElement('div', {},
+                                createElement('h3', { className: 'font-semibold text-gray-800 mb-3' }, 'API Metrics'),
+                                createElement('div', { className: 'space-y-2' },
+                                    externalData.metrics.slice(0, 3).map((metric, index) =>
+                                        createElement('div', 
+                                            { key: index, className: 'flex justify-between text-sm' },
+                                            createElement('span', { className: 'text-gray-600' }, metric.month),
+                                            createElement('span', { className: 'font-medium' }, `$${Math.round(metric.revenue).toLocaleString()}`)
+                                        )
+                                    )
+                                )
+                            ),
+                            createElement('div', {},
+                                createElement('h3', { className: 'font-semibold text-gray-800 mb-3' }, 'GitHub Contributors'),
+                                createElement('div', { className: 'space-y-2' },
+                                    externalData.contributors.map((contributor, index) =>
+                                        createElement('div', 
+                                            { key: index, className: 'flex items-center gap-3' },
+                                            createElement('img', { src: contributor.avatar, className: 'w-8 h-8 rounded-full' }),
+                                            createElement('div', {},
+                                                createElement('div', { className: 'font-medium text-sm' }, contributor.name),
+                                                createElement('div', { className: 'text-xs text-gray-500' }, `${contributor.contributions} contributions`)
+                                            )
+                                        )
+                                    )
+                                )
+                            )
+                        )
+                    )
+                )
+            );
+        }
+
+        ReactDOM.render(createElement(AnalyticsDashboard), document.getElementById('root'));
+    </script>
+</body>
+</html>
