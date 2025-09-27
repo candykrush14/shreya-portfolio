@@ -1,0 +1,261 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* Custom styles for analytics dashboard */
+.dashboard {
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', sans-serif;
+}
+
+/* Chart tooltip styles */
+.chart-tooltip {
+  pointer-events: none !important;
+  z-index: 1000;
+}
+
+/* Disable chart interactions during drag */
+.chart-container svg {
+  transition: pointer-events 0.1s ease;
+}
+
+.chart-container svg[data-dragging="true"] {
+  pointer-events: none !important;
+}
+
+/* Ensure drag handle has proper z-index and pointer events */
+.drag-handle {
+  z-index: 999 !important;
+  pointer-events: auto !important;
+  touch-action: none !important;
+}
+
+/* Basic drag styling */
+.widget-dragging {
+  user-select: none !important;
+  opacity: 0.8 !important;
+  transform: rotate(5deg) !important;
+  z-index: 1000 !important;
+}
+
+/* Clean drag transitions */
+.react-beautiful-dnd-draggable {
+  transition: transform 0.2s ease !important;
+}
+
+/* Ensure proper grid alignment */
+.grid {
+  display: grid !important;
+  gap: 1.5rem !important;
+}
+
+/* Force hardware acceleration for smooth dragging */
+.chart-container {
+  will-change: transform !important;
+  transform: translateZ(0) !important;
+}
+
+/* Ensure proper drag feedback */
+.widget-dragging svg {
+  pointer-events: none !important;
+}
+
+/* Drag placeholder styling */
+[data-rbd-placeholder-context-id] {
+  background-color: #f3f4f6 !important;
+  border: 2px dashed #d1d5db !important;
+  border-radius: 0.5rem !important;
+}
+
+/* Widget styles */
+.widget {
+  transition: all 0.3s ease;
+  padding: 2%; /* Ensure all widgets have 2% padding */
+}
+
+.widget:hover {
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+}
+
+/* Dropdown select styles */
+select {
+  padding: 2px 3px !important;
+  min-width: 38px;
+  max-width: 42px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  font-size: 10px;
+  line-height: 1.1;
+  text-align: center;
+  font-weight: 500;
+  letter-spacing: -0.5px;
+}
+
+/* Ensure dropdown options have proper padding */
+select option {
+  padding: 2px 4px;
+  white-space: nowrap;
+  font-size: 11px;
+  text-align: left;
+  letter-spacing: normal;
+}
+
+/* Size-specific dropdown styling */
+.dropdown-container select {
+  position: relative;
+  z-index: 100;
+  background: white;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+  width: 40px !important;
+  border-radius: 4px;
+}
+
+/* Loading animations */
+@keyframes pulse {
+  0%, 100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.5;
+  }
+}
+
+.animate-pulse {
+  animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+}
+
+/* Custom scrollbar */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+/* Card and container padding */
+.bg-white {
+  box-sizing: border-box;
+}
+
+/* Prevent text cutoff in dropdowns */
+.dropdown-container {
+  position: relative;
+  z-index: 10;
+}
+
+/* Ensure sufficient space for dropdown content */
+.widget-header {
+  padding: 1% 2% !important;
+  min-height: 36px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: nowrap;
+  gap: 4px;
+}
+
+/* Responsive adjustments for smaller widgets */
+.widget-header select {
+  flex-shrink: 0;
+  max-width: 40px;
+  width: 40px;
+}
+
+.widget-header .controls-container {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  flex-shrink: 0;
+}
+
+/* Chart content area spacing - merged with container styles below */
+
+::-webkit-scrollbar-track {
+  background: #f1f1f1;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #c1c1c1;
+  border-radius: 3px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #a8a8a8;
+}
+
+/* Focus styles */
+.focus\:ring-2:focus {
+  box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.5);
+}
+
+/* Chart container styles */
+.chart-container {
+  position: relative;
+  overflow: hidden;
+  padding: 2%;
+  box-sizing: border-box;
+}
+
+/* Chart SVG specific styles - only apply interaction blocking to SVG, not container */
+.chart-container svg {
+  touch-action: none;
+  user-select: none;
+  -webkit-user-select: none;
+  -moz-user-select: none;
+  -ms-user-select: none;
+}
+
+/* Drag handle overrides - ensure drag handles work properly */
+.widget-header {
+  touch-action: auto !important;
+  user-select: auto !important;
+  -webkit-user-select: auto !important;
+  -moz-user-select: auto !important;
+  -ms-user-select: auto !important;
+  position: relative;
+  z-index: 20;
+}
+
+/* Specific drag handle styling */
+.widget-header [data-rbd-drag-handle-draggable-id],
+.widget-header .cursor-grab {
+  touch-action: manipulation !important;
+  user-select: none !important;
+  cursor: grab !important;
+  background: rgba(0, 0, 0, 0.05) !important;
+  border-radius: 4px !important;
+  padding: 4px !important;
+  min-width: 24px !important;
+  min-height: 24px !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+}
+
+.widget-header [data-rbd-drag-handle-draggable-id]:hover,
+.widget-header .cursor-grab:hover {
+  background: rgba(0, 0, 0, 0.1) !important;
+}
+
+.widget-header [data-rbd-drag-handle-draggable-id]:active,
+.widget-header .cursor-grab:active {
+  cursor: grabbing !important;
+  background: rgba(0, 0, 0, 0.15) !important;
+}
+
+/* Responsive grid */
+@media (max-width: 768px) {
+  .dashboard-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (min-width: 769px) and (max-width: 1024px) {
+  .dashboard-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+@media (min-width: 1025px) {
+  .dashboard-grid {
+    grid-template-columns: repeat(3, 1fr);
+  }
+}

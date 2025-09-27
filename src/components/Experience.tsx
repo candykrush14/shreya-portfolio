@@ -15,71 +15,72 @@ const Experience = () => {
   const experiences = [
     {
       id: 1,
-      title: 'Senior Frontend Engineer',
-      company: 'TechCorp Solutions',
-      location: 'San Francisco, CA',
-      duration: 'Jan 2023 - Present',
+      title: 'Software Engineer',
+      company: 'Maersk',
+      location: 'Bengaluru, India',
+      duration: 'Jan 2024 - Present',
       type: 'Full-time',
-      description: 'Leading frontend development for enterprise-level applications serving 100K+ users. Architecting scalable React applications and mentoring junior developers.',
+      description: 'Led frontend development for enterprise apps serving 100K+ users. Built AI-powered, scalable UIs for logistics workflows with real-time analytics, LLM-driven insights, and fraud detection using modern, performance-focused solutions',
       achievements: [
-        'Reduced application load time by 40% through code splitting and optimization',
-        'Led migration from JavaScript to TypeScript across 15+ components',
-        'Implemented CI/CD pipeline reducing deployment time by 60%',
-        'Mentored 5 junior developers and conducted technical interviews'
+          'Improved app load time by 40% via performance optimizations (code splitting, lazy loading)',
+          'Led migration to TypeScript across 15+ components',
+          'Built scalable React apps for AI-driven logistics and travel workflows.',
+          'Integrated GenAI features and LLM chatbots using OpenAI, LangChain, and FAISS—cut support time by 35%.',
+          'Reduced deployment time by 60% by implementing CI/CD.',
+          'Designed modular frontends with React Hooks, Context API, and Vite.js.',
+          'Delivered accessible, responsive UIs and real-time analytics dashboards.',
+          'Collaborated on scalable APIs and caching strategies with backend teams',
+          'Enhanced security with OAuth2 and JWT, ensuring compliance with industry standards.',
+          'Implemented robust testing with Jest and React Testing Library, achieving 90%+ coverage.',
+          'Optimized cloud deployments on Azure, reducing costs by 25%.',
+          'Led micro-frontend architecture across cross-functional teams.'
+
       ],
-      technologies: ['React', 'TypeScript', 'Next.js', 'GraphQL', 'AWS', 'Docker'],
+      technologies: ['React', 'TypeScript', 'Next.js', 'GraphQL', 'Azure', 'Docker','Python','Node.js','OpenAI','LangChain','FAISS'],
       color: 'from-blue-500 to-purple-600'
     },
     {
       id: 2,
-      title: 'Frontend Engineer',
-      company: 'StartupXYZ',
-      location: 'Remote',
-      duration: 'Mar 2021 - Dec 2022',
+      title: 'Fullstack Software Development Engineer',
+      company: 'Accenture',
+      location: 'Bengaluru, India',
+      duration: 'Aug 2021 - Jan 2024',
       type: 'Full-time',
-      description: 'Built responsive web applications from scratch using modern frontend technologies. Collaborated closely with designers and backend engineers.',
+      description: 'Led development of analytics platforms and enterprise web applications with secure authentication, optimized UI, and data-driven insights across multiple projects.',
       achievements: [
-        'Developed 10+ React components used across multiple products',
-        'Improved user engagement by 35% through UX optimizations',
-        'Integrated payment systems processing $1M+ monthly transactions',
-        'Created comprehensive testing suite with 90% code coverage'
+          'Developed 10+ React components used across multiple products',
+          'Improved user engagement by 35% through UX optimizations',
+          'Integrated payment systems processing $1M+ monthly transactions',
+          'Created comprehensive testing suite with 90% code coverage',
+          'Built secure enterprise-grade platforms using React with multi-factor authentication, MSAL 1.5.8, and dynamic dashboards',
+          'Migrated legacy systems to modern, maintainable frontend stacks using TypeScript, significantly reducing technical debt and bug rate',
+          'Implemented frontend performance debugging via Chrome DevTools, reducing Time to Interactive (TTI) and optimizing asset delivery',
+          'Practiced test-driven development (TDD) and MVC architecture principles to create scalable, clean codebases',
+          'Collaborated cross-functionally with backend, DevOps, and QA teams, contributing to CI/CD pipelines and robust Git workflows',
+
       ],
-      technologies: ['React', 'JavaScript', 'Node.js', 'MongoDB', 'Stripe', 'Jest'],
+      technologies: ['React', 'JavaScript', 'Jest', '.Net core', 'Azure', 'MSAL', '.Net MVC', 'SQL Server', 'GIT', 'CI/CD'],
       color: 'from-green-500 to-teal-600'
     },
     {
-      id: 3,
-      title: 'Junior Frontend Developer',
-      company: 'Digital Agency Pro',
-      location: 'New York, NY',
-      duration: 'Jun 2019 - Feb 2021',
+     id: 3,
+      title: 'Associate Software Developer',
+      company: 'Accenture',
+      location: 'Bengaluru, India',
+      duration: 'Oct 2019 - Aug 2021',
       type: 'Full-time',
-      description: 'Developed client websites and web applications using HTML, CSS, JavaScript, and React. Worked on projects for Fortune 500 companies.',
-      achievements: [
-        'Built 20+ responsive websites with pixel-perfect designs',
-        'Implemented SEO best practices improving search rankings by 50%',
-        'Reduced bug reports by 30% through thorough testing procedures',
-        'Collaborated with design team to create design system'
-      ],
-      technologies: ['HTML', 'CSS', 'JavaScript', 'React', 'SASS', 'Webpack'],
-      color: 'from-orange-500 to-red-600'
-    },
-    {
-      id: 4,
-      title: 'Frontend Developer Intern',
-      company: 'InnovateLab',
-      location: 'Boston, MA',
-      duration: 'Jan 2019 - May 2019',
-      type: 'Internship',
-      description: 'Assisted in developing user interfaces for web applications. Gained hands-on experience with modern frontend development practices.',
+      description: 'Designed and optimized responsive web applications, improved system performance, and enhanced scalability via reusable code and robust testing practices.',
       achievements: [
         'Contributed to 5 client projects during internship period',
         'Learned React, Redux, and modern JavaScript best practices',
-        'Received outstanding intern performance review',
-        'Offered full-time position upon graduation'
+        'Received outstanding intern performance review by getting rewarded with sparkling star',
+        'Created responsive UIs and reusable components using React and TypeScript, ensuring mobile-first accessibility',
+        'Integrated APIs, performed SQL operations, and executed automated black-box testing, resolving 30% of known issues',
+        'Led frontend optimization initiatives, enhancing page speed and overall UX on desktop and mobile'
+
       ],
       technologies: ['HTML', 'CSS', 'JavaScript', 'React', 'Git'],
-      color: 'from-indigo-500 to-blue-600'
+      color: 'from-orange-500 to-red-600'
     }
   ];
 

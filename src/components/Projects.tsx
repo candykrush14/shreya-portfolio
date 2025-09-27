@@ -6,21 +6,21 @@ const Projects = () => {
     {
       id: 1,
       title: 'E-Commerce Platform',
-      description: 'A full-stack e-commerce platform built with React, TypeScript, and Node.js. Features include real-time inventory, payment processing, and admin dashboard.',
-      image: '/api/placeholder/600/400',
-      technologies: ['React', 'TypeScript', 'Node.js', 'MongoDB', 'Stripe', 'Tailwind CSS'],
-      githubUrl: 'https://github.com',
-      liveUrl: 'https://demo.com',
+      description: 'Modern e-commerce platform with microservices architecture, built using React, TypeScript, and advanced state management. Features product catalog, shopping cart, and secure checkout.',
+      image: 'https://images.unsplash.com/photo-1556742049-0cfed4f6a45d?w=600&q=80',
+      technologies: ['React', 'TypeScript', 'Zustand', 'Tailwind CSS', 'Framer Motion', 'Microservices'],
+      githubUrl: 'https://github.com/candykrush14/shreya-portfolio',
+      liveUrl: '/shreya-portfolio/ecommerce-platform/index.html',
       category: 'Full Stack'
     },
     {
       id: 2,
-      title: 'AI-Powered Analytics Dashboard',
-      description: 'Modern analytics dashboard with AI-driven insights, real-time data visualization, and interactive charts built with React and D3.js.',
-      image: '/api/placeholder/600/400',
-      technologies: ['React', 'D3.js', 'Python', 'FastAPI', 'PostgreSQL', 'Chart.js'],
-      githubUrl: 'https://github.com',
-      liveUrl: 'https://demo.com',
+      title: 'Interactive Analytics Dashboard',
+      description: 'A comprehensive data visualization dashboard with drag-and-drop widgets, real-time charts, and customizable layouts. Features include responsive design, interactive charts with D3.js, and advanced filtering capabilities.',
+      image: 'https://images.unsplash.com/photo-1551288049-bebda4e38f71?w=600&q=80',
+      technologies: ['React', 'TypeScript', 'D3.js', 'Tailwind CSS', 'Framer Motion'],
+      githubUrl: 'https://github.com/shreya-dashboard',
+      liveUrl: 'http://localhost:3000',
       category: 'Data Visualization'
     },
     {
@@ -67,10 +67,9 @@ const Projects = () => {
 
   const ProjectCard = ({ project, index }: { project: typeof projects[0], index: number }) => (
     <motion.div
-      initial={{ opacity: 0, y: 50 }}
-      whileInView={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.6, delay: index * 0.1 }}
-      viewport={{ once: true }}
+      initial={{ opacity: 0, y: 20 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.5, delay: index * 0.1 }}
       whileHover={{ y: -10 }}
       className="group bg-white rounded-2xl overflow-hidden shadow-lg hover:shadow-2xl transition-all duration-300"
     >
@@ -100,6 +99,25 @@ const Projects = () => {
             whileHover={{ scale: 1.1 }}
             whileTap={{ scale: 0.9 }}
             href={project.liveUrl}
+            onClick={(e) => {
+              // Special handling for analytics dashboard
+              if (project.id === 2) {
+                e.preventDefault();
+                window.open('http://localhost:3000', '_blank');
+                return;
+              }
+              
+              // Handle other non-http URLs
+              if (!project.liveUrl.startsWith('http')) {
+                e.preventDefault();
+                window.open(project.liveUrl, '_blank');
+              }
+              // Handle localhost URLs
+              else if (project.liveUrl.includes('localhost')) {
+                e.preventDefault();
+                window.open(project.liveUrl, '_blank');
+              }
+            }}
             target="_blank"
             rel="noopener noreferrer"
             className="p-2 bg-white/20 backdrop-blur-sm rounded-full text-white hover:bg-white/30 transition-colors"
@@ -148,6 +166,25 @@ const Projects = () => {
             whileHover={{ scale: 1.05 }}
             whileTap={{ scale: 0.95 }}
             href={project.liveUrl}
+            onClick={(e) => {
+              // Special handling for analytics dashboard
+              if (project.id === 2) {
+                e.preventDefault();
+                window.open('http://localhost:3000', '_blank');
+                return;
+              }
+              
+              // Handle other non-http URLs
+              if (!project.liveUrl.startsWith('http')) {
+                e.preventDefault();
+                window.open(project.liveUrl, '_blank');
+              }
+              // Handle localhost URLs  
+              else if (project.liveUrl.includes('localhost')) {
+                e.preventDefault();
+                window.open(project.liveUrl, '_blank');
+              }
+            }}
             target="_blank"
             rel="noopener noreferrer"
             className="flex-1 flex items-center justify-center gap-2 px-4 py-2 bg-gradient-to-r from-blue-600 to-indigo-600 text-white font-medium rounded-lg hover:from-blue-700 hover:to-indigo-700 transition-all"

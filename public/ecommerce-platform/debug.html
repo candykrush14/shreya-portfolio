@@ -1,0 +1,703 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ModernCart - E-Commerce Platform</title>
+    <script crossorigin src="https://unpkg.com/react@18/umd/react.development.js"></script>
+    <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"></script>
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        .gradient-text {
+            background: linear-gradient(to right, #3b82f6, #6366f1);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+        .hover-lift:hover {
+            transform: translateY(-5px);
+            transition: transform 0.3s ease;
+        }
+        .hover-scale:hover {
+            transform: scale(1.05);
+            transition: transform 0.2s ease;
+        }
+    </style>
+</head>
+<body>
+    <div id="root">Loading...</div>
+    
+    <script type="text/babel">
+        const { useState, useEffect, createContext, useContext } = React;
+
+        // Mock Products Data
+        const mockProducts = [
+            {
+                id: '1',
+                name: 'Premium Wireless Headphones',
+                description: 'Experience premium sound quality with active noise cancellation.',
+                price: 299.99,
+                originalPrice: 399.99,
+                image: 'https://images.unsplash.com/photo-1505740420928-5e560c06d30e?w=800&q=80',
+                category: 'Electronics',
+                stock: 25,
+                rating: 4.8,
+                reviewCount: 124,
+                isOnSale: true
+            },
+            {
+                id: '2',
+                name: 'Smart Fitness Watch',
+                description: 'Advanced fitness tracking with heart rate monitoring.',
+                price: 199.99,
+                image: 'https://images.unsplash.com/photo-1523275335684-37898b6baf30?w=800&q=80',
+                category: 'Electronics',
+                stock: 15,
+                rating: 4.6,
+                reviewCount: 89,
+                isOnSale: false
+            },
+            {
+                id: '3',
+                name: 'Professional Camera Lens',
+                description: 'Professional-grade 85mm portrait lens with exceptional quality.',
+                price: 1299.99,
+                image: 'https://images.unsplash.com/photo-1606983340126-99ab4feaa64a?w=800&q=80',
+                category: 'Electronics',
+                stock: 8,
+                rating: 4.9,
+                reviewCount: 45,
+                isOnSale: false
+            },
+            {
+                id: '4',
+                name: 'Ergonomic Office Chair',
+                description: 'Premium ergonomic chair for all-day comfort.',
+                price: 459.99,
+                originalPrice: 599.99,
+                image: 'https://images.unsplash.com/photo-1586023492125-27b2c045efd7?w=800&q=80',
+                category: 'Furniture',
+                stock: 12,
+                rating: 4.7,
+                reviewCount: 156,
+                isOnSale: true
+            },
+            {
+                id: '5',
+                name: 'Minimalist Desk Lamp',
+                description: 'Modern LED desk lamp with touch controls.',
+                price: 89.99,
+                image: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=800&q=80',
+                category: 'Home & Garden',
+                stock: 20,
+                rating: 4.4,
+                reviewCount: 67,
+                isOnSale: false
+            },
+            {
+                id: '6',
+                name: 'Wireless Charging Pad',
+                description: 'Fast wireless charging for all Qi-enabled devices.',
+                price: 39.99,
+                image: 'https://images.unsplash.com/photo-1594736797933-d0cce2769fa2?w=800&q=80',
+                category: 'Electronics',
+                stock: 35,
+                rating: 4.3,
+                reviewCount: 203,
+                isOnSale: false
+            }
+        ];
+
+        // App Context
+        const AppContext = createContext();
+
+        const AppProvider = ({ children }) => {
+            // State
+            const [activeSection, setActiveSection] = useState('home');
+            const [isCartOpen, setIsCartOpen] = useState(false);
+            const [isSearchOpen, setIsSearchOpen] = useState(false);
+            const [searchQuery, setSearchQuery] = useState('');
+            const [items, setItems] = useState([]);
+            const [total, setTotal] = useState(0);
+
+            // Functions
+            const addItem = (productId, quantity = 1) => {
+                setItems(prev => {
+                    const existing = prev.find(item => item.productId === productId);
+                    if (existing) {
+                        return prev.map(item => 
+                            item.productId === productId 
+                                ? { ...item, quantity: item.quantity + quantity }
+                                : item
+                        );
+                    }
+                    return [...prev, { productId, quantity }];
+                });
+            };
+
+            const removeItem = (productId) => {
+                setItems(prev => prev.filter(item => item.productId !== productId));
+            };
+
+            const updateQuantity = (productId, quantity) => {
+                if (quantity <= 0) {
+                    removeItem(productId);
+                    return;
+                }
+                setItems(prev => prev.map(item => 
+                    item.productId === productId ? { ...item, quantity } : item
+                ));
+            };
+
+            const getItemQuantity = (productId) => {
+                const item = items.find(item => item.productId === productId);
+                return item?.quantity || 0;
+            };
+
+            const clearCart = () => setItems([]);
+
+            const scrollToSection = (sectionId) => {
+                console.log('Scrolling to:', sectionId); // Debug log
+                setActiveSection(sectionId);
+                const element = document.getElementById(sectionId);
+                if (element) {
+                    element.scrollIntoView({ behavior: 'smooth' });
+                } else {
+                    console.log('Element not found:', sectionId);
+                }
+            };
+
+            const filteredProducts = mockProducts.filter(product =>
+                product.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+                product.description.toLowerCase().includes(searchQuery.toLowerCase()) ||
+                product.category.toLowerCase().includes(searchQuery.toLowerCase())
+            );
+
+            useEffect(() => {
+                const newTotal = items.reduce((sum, item) => {
+                    const product = mockProducts.find(p => p.id === item.productId);
+                    return sum + (product ? product.price * item.quantity : 0);
+                }, 0);
+                setTotal(newTotal);
+            }, [items]);
+
+            const itemCount = items.reduce((sum, item) => sum + item.quantity, 0);
+
+            const value = {
+                activeSection, setActiveSection, scrollToSection,
+                isCartOpen, setIsCartOpen,
+                isSearchOpen, setIsSearchOpen,
+                searchQuery, setSearchQuery, filteredProducts,
+                items, total, itemCount,
+                addItem, removeItem, updateQuantity, getItemQuantity, clearCart
+            };
+
+            return React.createElement(AppContext.Provider, { value }, children);
+        };
+
+        const useApp = () => {
+            const context = useContext(AppContext);
+            if (!context) {
+                throw new Error('useApp must be used within AppProvider');
+            }
+            return context;
+        };
+
+        // Search Modal Component
+        const SearchModal = () => {
+            const { isSearchOpen, setIsSearchOpen, searchQuery, setSearchQuery, filteredProducts, addItem } = useApp();
+
+            if (!isSearchOpen) return null;
+
+            return React.createElement('div', null, [
+                React.createElement('div', {
+                    key: 'backdrop',
+                    className: "fixed inset-0 bg-black bg-opacity-50 z-50",
+                    onClick: () => {
+                        console.log('Search backdrop clicked'); // Debug log
+                        setIsSearchOpen(false);
+                    }
+                }),
+                React.createElement('div', {
+                    key: 'modal',
+                    className: "fixed top-20 left-1/2 transform -translate-x-1/2 w-full max-w-2xl bg-white rounded-lg shadow-xl z-50 mx-4"
+                }, [
+                    React.createElement('div', { key: 'content', className: "p-4" }, [
+                        React.createElement('div', { key: 'input-container', className: "relative mb-4" }, [
+                            React.createElement('input', {
+                                key: 'search-input',
+                                type: "text",
+                                placeholder: "Search products...",
+                                value: searchQuery,
+                                onChange: (e) => setSearchQuery(e.target.value),
+                                className: "w-full pl-10 pr-10 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent",
+                                autoFocus: true
+                            }),
+                            React.createElement('div', {
+                                key: 'search-icon',
+                                className: "absolute left-3 top-3.5 text-gray-400"
+                            }, '🔍'),
+                            React.createElement('button', {
+                                key: 'close-btn',
+                                onClick: () => setIsSearchOpen(false),
+                                className: "absolute right-3 top-3.5 text-gray-400 hover:text-gray-600"
+                            }, '✕')
+                        ]),
+                        React.createElement('div', { key: 'results', className: "max-h-96 overflow-y-auto" }, 
+                            searchQuery.trim() === '' ? 
+                                React.createElement('div', { className: "text-center py-8 text-gray-500" }, "Start typing to search products...") :
+                            filteredProducts.length === 0 ?
+                                React.createElement('div', { className: "text-center py-8 text-gray-500" }, `No products found for "${searchQuery}"`) :
+                                React.createElement('div', { className: "space-y-2" },
+                                    filteredProducts.map(product =>
+                                        React.createElement('div', {
+                                            key: product.id,
+                                            className: "flex items-center gap-3 p-3 hover:bg-gray-50 rounded-lg"
+                                        }, [
+                                            React.createElement('img', {
+                                                key: 'img',
+                                                src: product.image,
+                                                alt: product.name,
+                                                className: "w-12 h-12 object-cover rounded-lg"
+                                            }),
+                                            React.createElement('div', { key: 'info', className: "flex-1" }, [
+                                                React.createElement('h3', { key: 'name', className: "font-medium text-gray-900" }, product.name),
+                                                React.createElement('p', { key: 'category', className: "text-sm text-gray-500" }, product.category),
+                                                React.createElement('p', { key: 'price', className: "text-sm font-semibold text-blue-600" }, `$${product.price}`)
+                                            ]),
+                                            React.createElement('button', {
+                                                key: 'add-btn',
+                                                onClick: () => {
+                                                    addItem(product.id, 1);
+                                                    setIsSearchOpen(false);
+                                                    setSearchQuery('');
+                                                },
+                                                className: "px-3 py-1 bg-blue-600 text-white text-sm rounded hover:bg-blue-700 transition-colors"
+                                            }, "Add to Cart")
+                                        ])
+                                    )
+                                )
+                        )
+                    ])
+                ])
+            ]);
+        };
+
+        // Cart Drawer Component
+        const CartDrawer = () => {
+            const { isCartOpen, setIsCartOpen, items, total, removeItem, updateQuantity, clearCart } = useApp();
+
+            if (!isCartOpen) return null;
+
+            return React.createElement('div', null, [
+                React.createElement('div', {
+                    key: 'backdrop',
+                    className: "fixed inset-0 bg-black bg-opacity-50 z-50",
+                    onClick: () => {
+                        console.log('Cart backdrop clicked'); // Debug log
+                        setIsCartOpen(false);
+                    }
+                }),
+                React.createElement('div', {
+                    key: 'drawer',
+                    className: "fixed right-0 top-0 h-full w-96 bg-white shadow-xl z-50"
+                }, [
+                    React.createElement('div', { key: 'container', className: "flex flex-col h-full" }, [
+                        React.createElement('div', { key: 'header', className: "flex items-center justify-between p-4 border-b" }, [
+                            React.createElement('h2', { key: 'title', className: "text-lg font-semibold" }, "Shopping Cart"),
+                            React.createElement('button', {
+                                key: 'close',
+                                onClick: () => {
+                                    console.log('Cart close clicked'); // Debug log
+                                    setIsCartOpen(false);
+                                },
+                                className: "p-2 hover:bg-gray-100 rounded-full"
+                            }, '✕')
+                        ]),
+                        React.createElement('div', { key: 'content', className: "flex-1 overflow-y-auto p-4" },
+                            items.length === 0 ?
+                                React.createElement('div', { className: "text-center py-8" }, [
+                                    React.createElement('div', { key: 'icon', className: "text-6xl mb-4" }, '🛒'),
+                                    React.createElement('p', { key: 'text', className: "text-gray-500" }, "Your cart is empty")
+                                ]) :
+                                React.createElement('div', { className: "space-y-4" },
+                                    items.map(item => {
+                                        const product = mockProducts.find(p => p.id === item.productId);
+                                        if (!product) return null;
+                                        
+                                        return React.createElement('div', {
+                                            key: item.productId,
+                                            className: "flex gap-3 p-3 bg-gray-50 rounded-lg"
+                                        }, [
+                                            React.createElement('img', {
+                                                key: 'img',
+                                                src: product.image,
+                                                alt: product.name,
+                                                className: "w-16 h-16 object-cover rounded-lg"
+                                            }),
+                                            React.createElement('div', { key: 'info', className: "flex-1" }, [
+                                                React.createElement('h3', { key: 'name', className: "font-medium text-sm" }, product.name),
+                                                React.createElement('p', { key: 'price', className: "text-blue-600 font-semibold" }, `$${product.price}`),
+                                                React.createElement('div', { key: 'controls', className: "flex items-center gap-2 mt-2" }, [
+                                                    React.createElement('button', {
+                                                        key: 'dec',
+                                                        onClick: () => updateQuantity(item.productId, item.quantity - 1),
+                                                        className: "w-6 h-6 bg-gray-200 rounded-full flex items-center justify-center text-sm hover:bg-gray-300"
+                                                    }, '-'),
+                                                    React.createElement('span', { key: 'qty', className: "text-sm font-medium" }, item.quantity),
+                                                    React.createElement('button', {
+                                                        key: 'inc',
+                                                        onClick: () => updateQuantity(item.productId, item.quantity + 1),
+                                                        className: "w-6 h-6 bg-gray-200 rounded-full flex items-center justify-center text-sm hover:bg-gray-300"
+                                                    }, '+')
+                                                ])
+                                            ]),
+                                            React.createElement('button', {
+                                                key: 'remove',
+                                                onClick: () => removeItem(item.productId),
+                                                className: "text-red-500 hover:text-red-700"
+                                            }, '🗑️')
+                                        ]);
+                                    })
+                                )
+                        ),
+                        items.length > 0 && React.createElement('div', { key: 'footer', className: "border-t p-4 space-y-4" }, [
+                            React.createElement('div', { key: 'total', className: "flex justify-between items-center font-semibold text-lg" },
+                                `Total: $${total.toFixed(2)}`
+                            ),
+                            React.createElement('div', { key: 'buttons', className: "space-y-2" }, [
+                                React.createElement('button', {
+                                    key: 'checkout',
+                                    className: "w-full bg-blue-600 text-white py-3 rounded-lg font-medium hover:bg-blue-700 transition-colors",
+                                    onClick: () => alert('Checkout functionality would be implemented here!')
+                                }, "Checkout"),
+                                React.createElement('button', {
+                                    key: 'clear',
+                                    onClick: clearCart,
+                                    className: "w-full bg-gray-200 text-gray-700 py-2 rounded-lg font-medium hover:bg-gray-300 transition-colors"
+                                }, "Clear Cart")
+                            ])
+                        ])
+                    ])
+                ])
+            ]);
+        };
+
+        // Header Component
+        const Header = () => {
+            const { activeSection, scrollToSection, itemCount, setIsCartOpen, setIsSearchOpen } = useApp();
+            
+            const navItems = [
+                { id: 'home', label: 'Home' },
+                { id: 'products', label: 'Products' },
+                { id: 'categories', label: 'Categories' },
+                { id: 'about', label: 'About' }
+            ];
+
+            return React.createElement('header', {
+                className: "sticky top-0 z-40 bg-white/95 backdrop-blur-md border-b border-gray-200"
+            }, [
+                React.createElement('div', { key: 'container', className: "max-w-7xl mx-auto px-4 sm:px-6 lg:px-8" }, [
+                    React.createElement('div', { key: 'content', className: "flex items-center justify-between h-16" }, [
+                        React.createElement('div', {
+                            key: 'logo',
+                            className: "flex items-center space-x-2 cursor-pointer",
+                            onClick: () => {
+                                console.log('Logo clicked'); // Debug log
+                                scrollToSection('home');
+                            }
+                        }, [
+                            React.createElement('div', { key: 'icon', className: "w-8 h-8 bg-gradient-to-r from-blue-600 to-indigo-600 rounded-lg flex items-center justify-center text-white" }, '🏪'),
+                            React.createElement('span', { key: 'text', className: "text-xl font-bold gradient-text" }, "ModernCart")
+                        ]),
+                        React.createElement('nav', { key: 'nav', className: "hidden md:flex items-center space-x-8" },
+                            navItems.map(item =>
+                                React.createElement('button', {
+                                    key: item.id,
+                                    onClick: () => {
+                                        console.log('Nav item clicked:', item.id); // Debug log
+                                        scrollToSection(item.id);
+                                    },
+                                    className: `text-sm font-medium cursor-pointer transition-colors ${
+                                        activeSection === item.id 
+                                            ? 'text-blue-600 border-b-2 border-blue-600 pb-1' 
+                                            : 'text-gray-700 hover:text-blue-600'
+                                    }`
+                                }, item.label)
+                            )
+                        ),
+                        React.createElement('div', { key: 'actions', className: "flex items-center space-x-4" }, [
+                            React.createElement('button', {
+                                key: 'search',
+                                className: "p-2 text-gray-600 hover:text-blue-600 transition-colors",
+                                onClick: () => {
+                                    console.log('Search clicked'); // Debug log
+                                    setIsSearchOpen(true);
+                                }
+                            }, '🔍'),
+                            React.createElement('button', {
+                                key: 'cart',
+                                className: "relative p-2 text-gray-600 hover:text-blue-600 transition-colors",
+                                onClick: () => {
+                                    console.log('Cart clicked'); // Debug log
+                                    setIsCartOpen(true);
+                                }
+                            }, [
+                                React.createElement('span', { key: 'icon' }, '🛒'),
+                                itemCount > 0 && React.createElement('span', {
+                                    key: 'badge',
+                                    className: "absolute -top-1 -right-1 w-5 h-5 bg-blue-600 text-white text-xs rounded-full flex items-center justify-center animate-pulse"
+                                }, itemCount)
+                            ])
+                        ])
+                    ])
+                ])
+            ]);
+        };
+
+        // Hero Section
+        const HeroSection = () => {
+            const { scrollToSection } = useApp();
+
+            return React.createElement('section', {
+                id: 'home',
+                className: "relative bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-100 overflow-hidden"
+            }, [
+                React.createElement('div', { key: 'container', className: "max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-20 lg:py-32" }, [
+                    React.createElement('div', { key: 'grid', className: "grid lg:grid-cols-2 gap-12 items-center" }, [
+                        React.createElement('div', { key: 'content' }, [
+                            React.createElement('h1', { key: 'title', className: "text-5xl lg:text-6xl font-bold text-gray-900 mb-6" }, [
+                                "Discover Amazing ",
+                                React.createElement('span', { key: 'highlight', className: "gradient-text" }, "Products")
+                            ]),
+                            React.createElement('p', { key: 'desc', className: "text-xl text-gray-600 mb-8 max-w-lg" },
+                                "Shop the latest trends with our curated collection of premium products. Experience modern e-commerce at its finest."
+                            ),
+                            React.createElement('div', { key: 'buttons', className: "flex flex-col sm:flex-row gap-4" }, [
+                                React.createElement('button', {
+                                    key: 'shop',
+                                    onClick: () => {
+                                        console.log('Shop Now clicked'); // Debug log
+                                        scrollToSection('products');
+                                    },
+                                    className: "px-6 py-3 bg-blue-600 text-white font-medium rounded-lg hover:bg-blue-700 transition-colors hover-scale"
+                                }, "Shop Now →"),
+                                React.createElement('button', {
+                                    key: 'learn',
+                                    onClick: () => {
+                                        console.log('Learn More clicked'); // Debug log
+                                        scrollToSection('about');
+                                    },
+                                    className: "px-6 py-3 bg-white text-gray-700 font-medium rounded-lg border border-gray-300 hover:bg-gray-50 transition-colors hover-scale"
+                                }, "Learn More")
+                            ])
+                        ]),
+                        React.createElement('div', { key: 'image', className: "relative" }, [
+                            React.createElement('img', {
+                                key: 'hero-img',
+                                src: "https://images.unsplash.com/photo-1441986300917-64674bd600d8?w=800&q=80",
+                                alt: "Shopping Experience",
+                                className: "rounded-2xl shadow-2xl w-full"
+                            })
+                        ])
+                    ])
+                ])
+            ]);
+        };
+
+        // Product Card Component
+        const ProductCard = ({ product }) => {
+            const { addItem, getItemQuantity } = useApp();
+            const itemQuantity = getItemQuantity(product.id);
+
+            return React.createElement('div', {
+                className: "bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden group cursor-pointer hover-lift"
+            }, [
+                React.createElement('div', { key: 'image-container', className: "relative overflow-hidden" }, [
+                    React.createElement('img', {
+                        key: 'image',
+                        src: product.image,
+                        alt: product.name,
+                        className: "w-full h-64 object-cover group-hover:scale-105 transition-transform duration-300"
+                    }),
+                    product.isOnSale && React.createElement('div', {
+                        key: 'sale-badge',
+                        className: "absolute top-3 left-3 bg-red-500 text-white px-2 py-1 rounded-full text-xs font-medium"
+                    }, "Sale"),
+                    React.createElement('button', {
+                        key: 'add-button',
+                        onClick: (e) => {
+                            e.preventDefault();
+                            e.stopPropagation();
+                            console.log('Add to cart clicked for:', product.name); // Debug log
+                            addItem(product.id, 1);
+                        },
+                        className: "absolute bottom-3 left-3 right-3 bg-blue-600 text-white py-2 rounded-lg font-medium opacity-0 group-hover:opacity-100 transform translate-y-2 group-hover:translate-y-0 transition-all duration-200"
+                    }, itemQuantity > 0 ? `Add More (${itemQuantity})` : 'Add to Cart')
+                ]),
+                React.createElement('div', { key: 'content', className: "p-4" }, [
+                    React.createElement('div', { key: 'rating', className: "flex items-center gap-1 mb-2" }, [
+                        React.createElement('div', { key: 'stars', className: "flex" },
+                            [...Array(5)].map((_, i) =>
+                                React.createElement('span', {
+                                    key: i,
+                                    className: `text-sm ${i < Math.floor(product.rating) ? 'text-yellow-400' : 'text-gray-300'}`
+                                }, '★')
+                            )
+                        ),
+                        React.createElement('span', { key: 'reviews', className: "text-sm text-gray-500 ml-1" }, `(${product.reviewCount})`)
+                    ]),
+                    React.createElement('h3', { key: 'name', className: "font-semibold text-gray-900 mb-2 group-hover:text-blue-600 transition-colors" }, product.name),
+                    React.createElement('p', { key: 'desc', className: "text-sm text-gray-600 mb-3" }, product.description),
+                    React.createElement('div', { key: 'price', className: "flex items-center gap-2 mb-3" }, [
+                        React.createElement('span', { key: 'current', className: "text-lg font-bold text-gray-900" }, `$${product.price}`),
+                        product.originalPrice && React.createElement('span', { key: 'original', className: "text-sm text-gray-500 line-through" }, `$${product.originalPrice}`)
+                    ]),
+                    React.createElement('div', { key: 'footer', className: "flex items-center justify-between" }, [
+                        React.createElement('span', {
+                            key: 'stock',
+                            className: `text-sm ${product.stock > 0 ? product.stock > 10 ? 'text-green-600' : 'text-orange-600' : 'text-red-600'}`
+                        }, product.stock > 0 ? product.stock > 10 ? 'In Stock' : `Only ${product.stock} left` : 'Out of Stock'),
+                        React.createElement('span', { key: 'category', className: "text-xs text-gray-500 bg-gray-100 px-2 py-1 rounded" }, product.category)
+                    ])
+                ])
+            ]);
+        };
+
+        // Products Section
+        const ProductsSection = () => {
+            return React.createElement('section', {
+                id: 'products',
+                className: "py-16 bg-gray-50"
+            }, [
+                React.createElement('div', { key: 'container', className: "max-w-7xl mx-auto px-4 sm:px-6 lg:px-8" }, [
+                    React.createElement('div', { key: 'header', className: "text-center mb-12" }, [
+                        React.createElement('h2', { key: 'title', className: "text-3xl font-bold text-gray-900 mb-4" }, "Featured Products"),
+                        React.createElement('p', { key: 'desc', className: "text-xl text-gray-600 max-w-3xl mx-auto" }, "Discover our handpicked selection of trending products")
+                    ]),
+                    React.createElement('div', { key: 'grid', className: "grid md:grid-cols-2 lg:grid-cols-3 gap-6" },
+                        mockProducts.map((product) =>
+                            React.createElement(ProductCard, { key: product.id, product })
+                        )
+                    )
+                ])
+            ]);
+        };
+
+        // Categories Section
+        const CategoriesSection = () => {
+            const categories = [
+                { name: 'Electronics', count: 4, icon: '📱' },
+                { name: 'Furniture', count: 1, icon: '🪑' },
+                { name: 'Home & Garden', count: 1, icon: '🏡' }
+            ];
+
+            return React.createElement('section', {
+                id: 'categories',
+                className: "py-16 bg-white"
+            }, [
+                React.createElement('div', { key: 'container', className: "max-w-7xl mx-auto px-4 sm:px-6 lg:px-8" }, [
+                    React.createElement('div', { key: 'header', className: "text-center mb-12" }, [
+                        React.createElement('h2', { key: 'title', className: "text-3xl font-bold text-gray-900 mb-4" }, "Shop by Category"),
+                        React.createElement('p', { key: 'desc', className: "text-xl text-gray-600" }, "Browse our product categories")
+                    ]),
+                    React.createElement('div', { key: 'grid', className: "grid md:grid-cols-3 gap-6" },
+                        categories.map((category) =>
+                            React.createElement('div', {
+                                key: category.name,
+                                className: "bg-gray-50 rounded-xl p-6 text-center hover-lift cursor-pointer"
+                            }, [
+                                React.createElement('div', { key: 'icon', className: "text-4xl mb-4" }, category.icon),
+                                React.createElement('h3', { key: 'name', className: "text-xl font-semibold text-gray-900 mb-2" }, category.name),
+                                React.createElement('p', { key: 'count', className: "text-gray-600" }, `${category.count} products`)
+                            ])
+                        )
+                    )
+                ])
+            ]);
+        };
+
+        // About Section
+        const AboutSection = () => {
+            return React.createElement('section', {
+                id: 'about',
+                className: "py-16 bg-gray-50"
+            }, [
+                React.createElement('div', { key: 'container', className: "max-w-7xl mx-auto px-4 sm:px-6 lg:px-8" }, [
+                    React.createElement('div', { key: 'grid', className: "grid lg:grid-cols-2 gap-12 items-center" }, [
+                        React.createElement('div', { key: 'content' }, [
+                            React.createElement('h2', { key: 'title', className: "text-3xl font-bold text-gray-900 mb-6" }, "About ModernCart"),
+                            React.createElement('p', { key: 'desc', className: "text-lg text-gray-600 mb-6" },
+                                "ModernCart is a cutting-edge e-commerce platform built with modern web technologies. This demo showcases advanced React patterns, state management, and responsive design principles."
+                            ),
+                            React.createElement('div', { key: 'features', className: "space-y-4" },
+                                [
+                                    "React 18 with Hooks & Context",
+                                    "Responsive Design with Tailwind CSS", 
+                                    "Modern E-commerce Patterns",
+                                    "Professional UI/UX Design"
+                                ].map((feature, i) =>
+                                    React.createElement('div', { key: i, className: "flex items-center gap-3" }, [
+                                        React.createElement('div', { key: 'dot', className: "w-2 h-2 bg-blue-600 rounded-full" }),
+                                        React.createElement('span', { key: 'text', className: "text-gray-700" }, feature)
+                                    ])
+                                )
+                            )
+                        ]),
+                        React.createElement('div', { key: 'image', className: "relative" }, [
+                            React.createElement('img', {
+                                key: 'about-img',
+                                src: "https://images.unsplash.com/photo-1556742049-0cfed4f6a45d?w=800&q=80",
+                                alt: "E-commerce Technology",
+                                className: "rounded-2xl shadow-2xl w-full"
+                            })
+                        ])
+                    ])
+                ])
+            ]);
+        };
+
+        // Footer Component
+        const Footer = () => {
+            return React.createElement('footer', {
+                className: "bg-gray-900 text-white py-12"
+            }, [
+                React.createElement('div', { key: 'container', className: "max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center" }, [
+                    React.createElement('div', { key: 'logo', className: "flex items-center justify-center space-x-2 mb-4" }, [
+                        React.createElement('div', { key: 'icon', className: "w-8 h-8 bg-gradient-to-r from-blue-600 to-indigo-600 rounded-lg flex items-center justify-center text-white" }, '🏪'),
+                        React.createElement('span', { key: 'text', className: "text-xl font-bold" }, "ModernCart")
+                    ]),
+                    React.createElement('p', { key: 'desc', className: "text-gray-400 mb-4" }, "Modern e-commerce platform built with cutting-edge technology."),
+                    React.createElement('p', { key: 'copy', className: "text-gray-400 text-sm" }, "© 2024 ModernCart. Built with ❤️ for demonstration of modern e-commerce development.")
+                ])
+            ]);
+        };
+
+        // Main App Component
+        const App = () => {
+            console.log('App rendering'); // Debug log
+            return React.createElement(AppProvider, null, [
+                React.createElement('div', { key: 'main', className: "min-h-screen bg-gray-50" }, [
+                    React.createElement(Header, { key: 'header' }),
+                    React.createElement(SearchModal, { key: 'search' }),
+                    React.createElement(CartDrawer, { key: 'cart' }),
+                    React.createElement('main', { key: 'content', className: "flex-1" }, [
+                        React.createElement(HeroSection, { key: 'hero' }),
+                        React.createElement(ProductsSection, { key: 'products' }),
+                        React.createElement(CategoriesSection, { key: 'categories' }),
+                        React.createElement(AboutSection, { key: 'about' })
+                    ]),
+                    React.createElement(Footer, { key: 'footer' })
+                ])
+            ]);
+        };
+
+        // Render the app
+        console.log('Starting React render'); // Debug log
+        const root = ReactDOM.createRoot(document.getElementById('root'));
+        root.render(React.createElement(App));
+        console.log('React render complete'); // Debug log
+    </script>
+</body>
+</html>

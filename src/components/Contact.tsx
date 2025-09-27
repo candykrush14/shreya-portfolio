@@ -38,22 +38,21 @@ const Contact = () => {
     {
       icon: Mail,
       title: 'Email',
-      value: 'shreya.srivastava@gmail.com',
-      link: 'mailto:shreya.srivastava@gmail.com',
+      value: 'shreyasrivastava0407@gmail.com',
+      link: 'mailto:shreya.srivastava0407@gmail.com',
       color: 'from-blue-500 to-cyan-500'
     },
     {
       icon: Phone,
       title: 'Phone',
-      value: '+1 (555) 123-4567',
-      link: 'tel:+15551234567',
+      value: '+91 9653229387',
       color: 'from-green-500 to-teal-500'
     },
     {
       icon: MapPin,
       title: 'Location',
-      value: 'San Francisco, CA',
-      link: 'https://maps.google.com/?q=San+Francisco,CA',
+      value: 'Bengaluru, India',
+      link: 'https://maps.google.com/?q=Bengaluru,India',
       color: 'from-purple-500 to-pink-500'
     }
   ];
@@ -122,10 +121,9 @@ const Contact = () => {
               <h4 className="text-lg font-semibold text-gray-900 mb-4">Follow Me</h4>
               <div className="flex space-x-4">
                 {[
-                  { name: 'GitHub', url: 'https://github.com', color: 'hover:text-gray-900' },
-                  { name: 'LinkedIn', url: 'https://linkedin.com', color: 'hover:text-blue-600' },
-                  { name: 'Twitter', url: 'https://twitter.com', color: 'hover:text-blue-400' },
-                  { name: 'Dribbble', url: 'https://dribbble.com', color: 'hover:text-pink-500' }
+                  { name: 'GitHub', url: 'https://github.com/candykrush14', color: 'hover:text-gray-900' },
+                  { name: 'LinkedIn', url: 'https://www.linkedin.com/in/shreya-srivastava-580baa168', color: 'hover:text-blue-600' },
+                  { name: 'GitHub Pages', url: 'https://candykrush14.github.io/shreya-portfolio', color: 'hover:text-blue-400' }
                 ].map((social) => (
                   <motion.a
                     key={social.name}
